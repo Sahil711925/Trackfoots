@@ -158,6 +158,40 @@ with root can read every log file and still cannot forge a receipt for a line th
 
 ---
 
+## Writing logs to it (the part that makes it a product)
+
+An application posts a line and gets back a **signed receipt** — proof of what it wrote, at the moment
+it wrote it, before any attacker can touch the server.
+
+```bash
+curl -s -X POST localhost:5173/api/log \
+  -H "x-api-key: $INGEST_KEY" -H 'content-type: application/json' \
+  -d '{"actor":"rahul","action":"ssh login accepted","meta":{"ip":"103.21.44.9"}}'
+```
+
+```json
+{ "accepted": 1, "rejected": [],
+  "receipts": [{ "seq": 1201, "chash": "1a8b5856…", "sig": "155f5fb7…", "sigAlg": "hmac-sha256" }] }
+```
+
+| Rule | Value |
+|---|---|
+| Endpoint | `POST /api/log` (alias `/api/ingest`) |
+| Auth | `x-api-key` header, key from `INGEST_KEY`; 401 without it |
+| Batch | up to 1,000 entries per request |
+| Body limit | 2 MB |
+| Validation | `action` required; `ts` must parse; `meta` must be an object under 4,000 bytes |
+| Response | `202` with one receipt per accepted line; `400` with per-index reasons |
+| Stats | `GET /api/stats` — entries, batches, **unanchored** backlog |
+
+`GET /api/stats` also reports `unanchored`: entries written since the last published batch. That number is
+the anchor window, exposed rather than hidden — in the UI it is the one line that can grow between attacks.
+
+There is a **`Send a live line`** button in the UI that pushes a real line through this path so the receipt
+can be shown on screen. It is restricted to localhost; the authenticated endpoint is the real one.
+
+---
+
 ## Real logs, not invented ones
 
 The demo seeds synthetic entries so the numbers are reproducible, but the importer takes actual logs:

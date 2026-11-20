@@ -121,6 +121,7 @@
     <button class="g" onclick="proveEntry()">Prove entry</button>
     <button onclick="bundleEntry()">Evidence bundle</button>
     <button class="r" onclick="forgeReceipt()">Forge a receipt</button>
+    <button onclick="emitLine()">Send a live line</button>
   </div>
 
   <div id="proofout"></div>
@@ -303,6 +304,28 @@ async function forgeReceipt(){
           <div class="row"><span class="k">why it failed</span><span>the HMAC key is not on this machine</span></div>
         </div>`;
     }
+  } finally { lock(false); }
+}
+
+async function emitLine(){
+  lock(true);
+  try {
+    const res = await fetch('/api/demo/emit', {method:'POST'});
+    const d = await res.json();
+    if (res.status !== 202) {
+      document.getElementById('proofout').innerHTML = `<div class="proofcard"><h4>Live ingest</h4><div class="no">${esc(d.error || 'failed')}</div></div>`;
+      return;
+    }
+    const r = (d.receipts || [])[0] || {};
+    document.getElementById('proofout').innerHTML = `
+      <div class="proofcard"><h4>Accepted over the API · signed receipt returned</h4>
+        <div class="row"><span class="k">line</span><span>${esc(d.line.actor)} — ${esc(d.line.action)}</span></div>
+        <div class="row"><span class="k">sequence</span><span>${r.seq}</span></div>
+        <div class="row"><span class="k">content hash</span><span>${String(r.chash || '').slice(0,32)}…</span></div>
+        <div class="row"><span class="k">receipt signature</span><span class="yes">${String(r.sig || '').slice(0,32)}…</span></div>
+        <div class="row"><span class="k">endpoint</span><span>POST /api/log · x-api-key</span></div>
+      </div>`;
+    await load();
   } finally { lock(false); }
 }
 

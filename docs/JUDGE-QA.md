@@ -70,7 +70,13 @@ Then, if they want more:
 > to prune anything that sits inside a published batch — deleting leaves that are already anchored destroys
 > evidence rather than expiring it. That refusal is the point: retention must not become a way to cover tracks."
 
-**10. "Did you build this?"**
+**10. "How does an application actually send you logs?"**
+> "POST /api/log with an API key and JSON. You get back a signed receipt — sequence number, content hash, HMAC
+> signature — at write time, before an attacker could touch anything. Up to a thousand entries per request,
+> 401 without the key, per-index rejection reasons for anything malformed. `GET /api/stats` reports the
+> unanchored backlog, which is the anchor window made visible."
+
+**11. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

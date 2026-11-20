@@ -20,6 +20,7 @@ const { buildProof } = require('./lib/proof');
 const { buildBundle } = require('./lib/bundle');
 const { checkChainOfCheckpoints } = require('./lib/consistency');
 const { verifyPayload } = require('./lib/auditor');
+const { ingest, MAX_BATCH } = require('./lib/ingest');
 
 const PORT = Number(process.env.PORT || 5173);
 const ROOT = __dirname;
@@ -93,6 +94,74 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/state') return json(res, 200, state());
+
+  /**
+   * The write path an application actually uses.
+   * Requires x-api-key when INGEST_KEY is configured; returns a signed receipt per accepted line.
+   */
+  if (req.method === 'POST' && (url.pathname === '/api/log' || url.pathname === '/api/ingest')) {
+    const expected = process.env.INGEST_KEY;
+    if (!expected) return json(res, 503, { error: 'ingest disabled: set INGEST_KEY in the environment' });
+    const given = req.headers['x-api-key'];
+    if (!given || given !== expected) return json(res, 401, { error: 'invalid or missing x-api-key' });
+
+    let body = '';
+    let tooBig = false;
+    req.on('data', (c) => {
+      body += c;
+      if (body.length > 2_000_000) {
+        tooBig = true;
+        req.destroy();
+      }
+    });
+    req.on('end', () =>
+      withLock(res, () => {
+        if (tooBig) return json(res, 413, { error: 'request body too large (2 MB)' });
+        try {
+          const payload = body ? JSON.parse(body) : {};
+          const result = ingest(payload);
+          return json(res, result.accepted ? 202 : 400, { ...result, maxBatch: MAX_BATCH, ...state() });
+        } catch (err) {
+          return json(res, 400, { error: err.message, maxBatch: MAX_BATCH });
+        }
+      })
+    );
+    return;
+  }
+
+  // Demo emitter: lets the presenter push a real line through the authenticated ingest path
+  // without pasting a key on stage. Localhost only — never exposed off-box.
+  if (req.method === 'POST' && url.pathname === '/api/demo/emit') {
+    const ip = req.socket.remoteAddress || '';
+    if (!/^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(ip)) return json(res, 403, { error: 'localhost only' });
+    const lines = [
+      { actor: 'rahul', action: 'ssh login accepted', meta: { ip: '103.21.44.9', port: 51234, method: 'publickey' } },
+      { actor: 'priya', action: 'sudo /bin/cat /etc/shadow', meta: { ip: '103.21.44.31', tty: 'pts/2' } },
+      { actor: 'arjun', action: 'GET /api/orders/1182 200', meta: { ip: '49.36.7.201', status: 200 } },
+      { actor: 'meera', action: 'ssh login failed', meta: { ip: '185.220.101.7', attempts: 4 } },
+    ];
+    const pick = lines[Math.floor(Math.random() * lines.length)];
+    try {
+      const result = ingest(pick);
+      return json(res, 202, { line: pick, ...result });
+    } catch (err) {
+      return json(res, 400, { error: err.message });
+    }
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/stats') {
+    const logs = store.readLogs().filter((r) => r.ok).map((r) => r.entry);
+    const ledger = store.readLedger();
+    const last = ledger[ledger.length - 1];
+    return json(res, 200, {
+      entries: logs.length,
+      batches: ledger.length,
+      unanchored: last ? logs.filter((e) => e.seq > last.toSeq).length : logs.length,
+      oldest: logs.length ? logs[0].ts : null,
+      newest: logs.length ? logs[logs.length - 1].ts : null,
+      ingest: { endpoint: '/api/log', auth: 'x-api-key', maxBatch: MAX_BATCH, enabled: Boolean(process.env.INGEST_KEY) },
+    });
+  }
 
   if (req.method === 'GET' && url.pathname === '/auditor') {
     const html = fs.readFileSync(path.join(ROOT, 'public', 'auditor.html'));
