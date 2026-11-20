@@ -58,12 +58,18 @@ Then, if they want more:
 > and stops. The report records which method ran."
 
 **8. "How many events per second? What does this cost to run?"**
-> "On this laptop, 88,700 entries per second through the chain and batching — 11 microseconds each. Re-verifying
-> 50,000 entries takes 204 milliseconds. Anchoring costs about 73,900 gas per checkpoint, which at L2 prices is
-> $2.30 per 100,000 events — the same as the published figure in the arXiv paper, because gas sets that price,
-> not our code. The honest limit is the audit pass: it re-derives every checkpoint prefix, so it's quadratic in
-> batches × entries. Fine at 1,200, about 2.5 seconds at 10,000. The fix is incremental roots, and it's written
-> in the README as not done."
+> "On this laptop, 88,700 entries per second through the chain and batching — 11 microseconds each. A full
+> audit of 50,000 entries across 500 checkpoints takes 2.2 seconds; it was 107 seconds before I replaced the
+> per-checkpoint prefix rebuild with an incremental RFC 6962 accumulator — 245× faster, and every root is
+> byte-identical, which is the only reason I accepted the rewrite. Anchoring costs about 73,900 gas per
+> checkpoint, $2.30 per 100,000 events at 100-event epochs, matching the arXiv figure because gas sets that
+> price, not our code. Honest limit: single node, single thread, no fsync."
+
+**8b. "How do I know you didn't just delete a receipt?"**
+> "Receipts are individually signed, but that only proves each one is real. So the whole receipt set is
+> committed to its own Merkle root and shipped inside the bundle. Drop one receipt and every surviving
+> signature still verifies — but the set no longer reproduces the committed root: 'receipt set is incomplete:
+> 1199 present, 1200 committed', exit 2. Complete and authentic are two different checks."
 
 **9. "Does this meet CERT-In retention?"**
 > "`npm run retention` reports it: 180-day window, what's inside, what's expired, oldest entry age. And it refuses

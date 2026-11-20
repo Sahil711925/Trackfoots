@@ -21,6 +21,7 @@
     "liveness": "node scripts/check-liveness.js",
     "consistency": "node scripts/check-consistency.js",
     "auditor": "node scripts/auditor.js",
+    "verify:receipts": "node scripts/verify-receipts.js",
     "import": "node scripts/import-logs.js",
     "seed:real": "node scripts/seed-real.js",
     "bench": "node scripts/bench.js",

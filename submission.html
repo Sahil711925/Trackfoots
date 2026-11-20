@@ -66,8 +66,15 @@ demonstrated it.</p>
   <li><b>On-chain anchoring.</b> The root is written to the <code>LogAnchor</code> smart contract. The contract
       refuses to overwrite an existing sequence number, so a published root can never be changed — not by the
       operator, not by the attacker.</li>
-  <li><b>Write-time receipts.</b> Each entry's content hash is returned to the auditor at write time and stored
-      outside the server, so deleted lines can be proven to have existed.</li>
+  <li><b>Write-time receipts.</b> Every application that writes a line through the ingest API gets back a signed
+      receipt immediately — sequence, content hash, HMAC tag — held off-box by the emitter. Deleted lines can be
+      proven to have existed even when the whole log is gone.</li>
+  <li><b>Receipt-set commitment.</b> Individual signatures prove a receipt is real; a Merkle root over the receipt
+      set proves you were handed <i>all</i> of them. An attacker who owns the receipt store cannot quietly drop
+      one without breaking the committed root.</li>
+  <li><b>Filing, not just detecting.</b> Detection produces a CERT-In 6-hour notification: incident ID, detection
+      time, affected sequences, published roots, contract address, verification steps for the recipient — and an
+      explicit section listing what the evidence cannot prove.</li>
 </ul>
 
 <h2>Why the blockchain is load-bearing</h2>
@@ -86,6 +93,12 @@ recomputed roots against roots that were published earlier and cannot move.</p>
   <tr><th>Result</th><td><b>TAMPERED.</b> Batch 3's published root no longer matches; the exact batch and entry
       range are identified</td></tr>
   <tr><th>Recovery</th><td>The 34 deleted lines are recovered from write-time receipts held outside the server</td></tr>
+  <tr><th>Not just detection</th><td>An alert is raised and dispatched the moment verification fails — nobody has
+      to be watching a dashboard</td></tr>
+  <tr><th>The filing</th><td>One click produces the CERT-In 6-hour notification, built from verifier output, with a
+      section stating what the evidence <i>cannot</i> prove</td></tr>
+  <tr><th>Independent check</th><td>A separate verifier reads only the bundle and the chain — never our log files —
+      and refuses a bundle altered by a single character</td></tr>
 </table>
 
 <h2>Who it helps</h2>
@@ -103,20 +116,26 @@ we apply the same pattern one level down, from the certificate to the evidence b
   </div>
   <div>
     <h2>Implementation size</h2>
-    <p>~2,850 lines across 39 files, including 61 automated tests. Hash chain, RFC 6962 Merkle tree with inclusion
-    and consistency proofs, a Solidity contract, an anchoring worker, a four-way auditor, two attacker profiles
-    and a web UI.</p>
+    <p>~8,200 lines across 74 files, including 129 automated tests. Hash chain, RFC 6962 Merkle tree with inclusion,
+    consistency and incremental-checkpoint proofs, a Solidity contract, an authenticated ingest API, an anchoring
+    worker, an independent auditor, two attacker profiles, a CERT-In report generator and a web UI.</p>
   </div>
 </div>
 
 <h2>Honest limitations</h2>
 <ul>
-  <li>The anchor interval leaves a short window: entries not yet batched are protected by the hash chain only.
-      Closing it needs per-write anchoring at higher cost, or the receipt path promoted to primary.</li>
-  <li>If the attacker blocks outbound traffic, new anchors stop. History cannot be rewritten, but new entries go
-      unwitnessed until an alarm fires (alarm not yet implemented).</li>
-  <li>If the anchor signing key is stolen, the attacker can publish new roots — but never alter old ones.</li>
-  <li>The demonstration runs on a local EVM chain; the contract is chain-agnostic and deploys to Amoy unchanged.</li>
+  <li><b>Entries written directly to disk</b>, bypassing the ingest API, are protected only by the hash chain until
+      the next anchor lands. Applications that write through the API get a signed receipt at write time, which
+      closes that window for them — this is built, not planned.</li>
+  <li><b>If the attacker blocks outbound traffic</b>, new anchors stop. History cannot be rewritten, but new entries
+      go unwitnessed until the staleness check fires — it now raises an alert.</li>
+  <li><b>If the anchor signing key is stolen</b>, the attacker can publish new roots — but never alter old ones.</li>
+  <li><b>Local EVM, not a public testnet.</b> The contract compiles for Polygon Amoy, the Amoy RPC is reachable and
+      the transaction was signed and broadcast — it was rejected for gas because we could not obtain testnet POL:
+      every faucet available from this host requires a captcha, a mainnet balance or a social login. The attempt,
+      with literal error text, is in <code>docs/AMOY-ATTEMPT.md</code>. We did not fake a transaction hash.</li>
+  <li><b>Single node.</b> No replication, no fsync, no HA. The security properties hold; the availability properties
+      are a deployment problem we did not solve in 24 hours.</li>
 </ul>
 
 <div class="foot">

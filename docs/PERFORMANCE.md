@@ -175,6 +175,29 @@ Read the table as an order of magnitude, not a service-level commitment. Specifi
 - **Small batches dominate the root cost at high rates.** At 59k events/s sustained, one core is
   saturated by ingest plus roots. Nothing here was tested above ~100k events/s.
 
+## The audit rewrite (checkpoint roots, before vs after)
+
+The first version re-derived every checkpoint's cumulative root from scratch, so an audit was
+O(batches × entries). At 1,200 entries nobody notices; at 50,000 it took **107 seconds**.
+
+`createMerkleAccumulator()` in `lib/merkle.js` keeps the RFC 6962 frontier instead, so each checkpoint costs
+O(log n) to report. Measured by `npm run bench` over identical leaves:
+
+| entries | checkpoints | before | after | speedup | roots |
+|---|---|---|---|---|---|
+| 1,000 | 10 | 32 ms | 4 ms | 7.6× | identical |
+| 10,000 | 100 | 4,331 ms | 56 ms | 77× | identical |
+| 20,000 | 200 | 17,294 ms | 197 ms | 88× | identical |
+| 50,000 | 500 | 107,506 ms | 438 ms | **246×** | identical |
+
+Full `verify()` on 50,000 anchored entries: **2.2 s** (44 µs/entry), verdict VERIFIED.
+
+The only reason this was safe to ship: the incremental root is **byte-identical** to the naive one.
+`tests/merkle-incremental.test.js` checks 600 prefix sizes and 27 tree-shape boundaries against
+`merkleRoot()`, and the 12 live checkpoints were re-derived both ways before and after the change.
+A left-fold accumulator agrees with the naive version for k ≤ 6 and diverges at k = 7 — which would have
+silently broken every on-chain comparison while passing every small-batch test. That case is now pinned.
+
 ## Answering the question out loud
 
 - *"How many events per second?"* — **~88,000/s** ingesting on one laptop core, **~59,000/s** sustained

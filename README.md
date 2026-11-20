@@ -156,6 +156,25 @@ bundle, or press **Tamper with it** to watch the verification break.
 Receipts are signed with HMAC-SHA256 using a key held **outside** `data/` (environment/KMS). An intruder
 with root can read every log file and still cannot forge a receipt for a line that was never written.
 
+That proves each receipt is real. It does not prove you were handed *all* of them — an attacker who owns
+the receipt store could quietly drop one. So the receipt set is committed to its own Merkle root, and
+exported bundles carry that root next to the receipts:
+
+```bash
+npm run verify:receipts -- --bundle exports/bundle-250.json
+```
+
+```
+  ✔ every receipt signature is valid            1200 valid (key: env)
+  ✔ receipt set reproduces the committed receipt root
+  ✔ receipt inclusion proof rebuilds the receipt root
+  VERDICT: the receipt set is complete and authentic          exit 0
+```
+
+Drop one receipt from the same file and every surviving signature is still valid — but the set no longer
+reproduces the committed root: `receipt set is incomplete: 1199 present, 1200 committed`, exit 2.
+Authenticity and completeness are different claims, and the verifier now makes both.
+
 ---
 
 ## Filing it: the 6-hour report
@@ -270,13 +289,17 @@ Measured on a laptop (i5-1135G7, 7.8 GB RAM, Node 26), median of repeated runs �
 | Hash-chain re-verify | **4.1 µs/entry** (50k entries in 204 ms) |
 | Merkle root, 100 leaves | **0.58 ms** (5.8 µs/leaf) |
 | Merkle root, 10,000 leaves | 39 ms (3.9 µs/leaf) |
+| **Full audit, 50,000 entries / 500 checkpoints** | **2.2 s** (44 µs/entry) — was **107 s** before the accumulator rewrite |
+| **Checkpoint re-derivation, 50,000** | **438 ms vs 107,506 ms** — 245× faster, roots byte-identical |
 | Anchor gas | ~73,905 gas (static estimate from the contract) |
 | Anchoring cost | **$2.30 per 100K events** at 100-event epochs — matches arXiv 2609.01931, as expected since gas sets the price, not our code |
 
-Honest caveats: single-threaded, laptop CPU, no `fsync` (durability covers a process crash, not power loss),
-and the full audit pass is **quadratic in batches × entries** because it re-derives every checkpoint prefix —
-fine at 1,200 entries (60 ms) and ~2.5 s at 10,000. The fix is incremental checkpoint roots; it is not
-implemented, and the doc says so.
+The audit is **O(n log n)**: checkpoint roots come from a single incremental RFC 6962 accumulator
+(`createMerkleAccumulator`) instead of rebuilding each prefix from scratch. The rewrite was accepted only
+because it reproduced every published root byte-for-byte — 600 prefix sizes, 27 tree-shape boundaries, and
+all 12 checkpoints of the live demo agree, and `tests/merkle-incremental.test.js` pins it.
+
+Honest caveats: single-threaded, laptop CPU, no `fsync` (durability covers a process crash, not power loss).
 
 Expected output of the middle step, which is the whole point:
 

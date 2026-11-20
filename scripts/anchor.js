@@ -10,7 +10,7 @@
  * The fingerprint is identical in both modes. Only the witness changes.
  */
 require('../lib/env');
-const { merkleRoot, sha256 } = require('../lib/merkle');
+const { merkleRoot, createMerkleAccumulator, sha256 } = require('../lib/merkle');
 const store = require('../lib/store');
 
 let chainLib;
@@ -35,6 +35,12 @@ async function anchorAll({ verbose = true } = {}) {
   let prevTx = ledger.length ? ledger[ledger.length - 1].txHash : 'GENESIS';
   const cl = chainReady();
 
+  // Checkpoint roots are cumulative, and each one extends the last. Folding the entries in
+  // once, in file order, keeps that prefix state instead of re-hashing every earlier entry
+  // per batch (which made anchoring O(batches × entries) — ~48 s for 50k entries).
+  const checkpoint = createMerkleAccumulator();
+  let checkpointCursor = 0; // entries already folded into `checkpoint`
+
   for (let b = 1; b <= total; b++) {
     if (alreadyAnchored.has(b)) continue;
     const from = (b - 1) * store.BATCH_SIZE;
@@ -48,7 +54,13 @@ async function anchorAll({ verbose = true } = {}) {
     //                    checkpoint, and it is what makes consistency proofs possible:
     //                    checkpoint N+1 must be an extension of checkpoint N.
     const root = merkleRoot(slice.map((e) => e.hash));
-    const checkpointRoot = merkleRoot(rows.slice(0, from + slice.length).map((e) => e.hash));
+    // Skip-ahead is safe: batches already anchored above simply get folded in late, and a
+    // prefix of file order is all a checkpoint ever claims.
+    while (checkpointCursor < from + slice.length) {
+      checkpoint.append(rows[checkpointCursor].hash);
+      checkpointCursor += 1;
+    }
+    const checkpointRoot = checkpoint.root();
     const ts = new Date().toISOString();
 
     let txHash = '0x' + sha256(prevTx + checkpointRoot + ts + b);

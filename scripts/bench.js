@@ -32,7 +32,8 @@ process.env.ANCHOR_ON_CHAIN = 'false'; // nothing dials a chain
 process.env.CHAIN = 'local';
 
 const store = require('../lib/store');
-const { merkleRoot, sha256 } = require('../lib/merkle');
+const M = require('../lib/merkle');
+const { merkleRoot, sha256 } = M;
 
 // ---------------------------------------------------------------- helpers
 
@@ -191,7 +192,116 @@ function benchMerkle(sizes, repeats, log) {
   return results;
 }
 
-// ---------------------------------------------------------------- 4. cost
+// ---------------------------------------------------------------- 4. full audit
+/**
+ * The end-to-end audit, not just the chain walk: anchor the entries currently on disk, then
+ * time lib/verify.js over the lot. This is the number that used to go quadratic — the
+ * checkpoint pass re-derived every prefix Merkle root from scratch, once per batch.
+ */
+async function benchAudit(repeats, log) {
+  const { anchorAll } = require('../scripts/anchor.js');
+  const { verify } = require('../lib/verify.js');
+
+  gcSettle();
+  const a0 = performance.now();
+  const published = await anchorAll({ verbose: false });
+  const anchorMs = performance.now() - a0;
+
+  const samples = [];
+  let report;
+  for (let r = 0; r < repeats; r++) {
+    gcSettle();
+    const t0 = performance.now();
+    report = verify();
+    samples.push(performance.now() - t0);
+  }
+
+  const out = {
+    entries: report.entriesOnDisk,
+    batches: report.batchesPublished,
+    new_batches_anchored: published.length,
+    anchor_ms: ms(anchorMs),
+    med_audit_ms: ms(median(samples)),
+    us_per_entry: report.entriesOnDisk ? Math.round((median(samples) * 1000) / report.entriesOnDisk * 100) / 100 : null,
+    all_audit_ms: samples.map(ms),
+    checkpoint_mismatches: report.checkpointMismatches.length,
+    bad_batches: report.badBatches.length,
+    verdict: report.verdict,
+  };
+  if (log) {
+    log(`  audit  ${String(out.entries).padStart(6)}  ${String(out.med_audit_ms).padStart(10)} ms   ${String(out.us_per_entry).padStart(8)} µs/entry  ${out.verdict}  (${out.batches} checkpoints, anchored in ${out.anchor_ms} ms)`);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- 5. checkpoints
+/**
+ * The checkpoint pass on its own, old way vs new way, over identical leaves.
+ *
+ *   BEFORE  for each batch: merkleRoot(all leaves so far)   — re-hashes every earlier leaf
+ *           per batch, O(batches × entries), so the whole audit is quadratic
+ *   AFTER   one accumulator: append each leaf once, ask for the root per checkpoint
+ *           — O(entries · log entries) total, O(log n) per checkpoint
+ *
+ * Both roots are computed here and compared leaf-for-leaf, so the speedup is only reported
+ * when the fast path produced byte-identical checkpoint roots. The BEFORE column gets a
+ * single sample (it is the slow path, and at 50k that sample alone is ~45 s); AFTER gets the
+ * usual repeats.
+ */
+function benchCheckpoints(sizes, repeats, log) {
+  const BATCH = 100;
+  const results = {};
+  for (const n of sizes) {
+    const hashes = fakeHashes(n);
+    const checkpoints = [];
+    const build = M.createMerkleAccumulator();
+    for (let i = 0; i < n; i += BATCH) {
+      build.appendAll(hashes.slice(i, i + BATCH));
+      checkpoints.push({ toSeq: Math.min(i + BATCH, n), root: build.root() });
+    }
+
+    gcSettle();
+    const t0 = performance.now();
+    let naiveOk = 0;
+    for (const c of checkpoints) if (M.merkleRoot(hashes.slice(0, c.toSeq)) === c.root) naiveOk += 1;
+    const naiveMs = performance.now() - t0;
+
+    const samples = [];
+    let freshOk = 0;
+    for (let r = 0; r < repeats; r++) {
+      gcSettle();
+      const t1 = performance.now();
+      const acc = M.createMerkleAccumulator();
+      let ok = 0;
+      for (const c of checkpoints) {
+        while (acc.size() < c.toSeq) acc.append(hashes[acc.size()]);
+        if (acc.root() === c.root) ok += 1;
+      }
+      samples.push(performance.now() - t1);
+      freshOk = ok;
+    }
+
+    const incMs = ms(median(samples));
+    results[n] = {
+      entries: n,
+      checkpoints: checkpoints.length,
+      before_ms: ms(naiveMs),
+      after_ms: incMs,
+      speedup: incMs > 0 ? Math.round((naiveMs / incMs) * 10) / 10 : null,
+      roots_identical: naiveOk === checkpoints.length && freshOk === checkpoints.length,
+      before_samples: 1,
+    };
+    if (log) {
+      log(
+        `  checkpt${String(n).padStart(6)}  ${String(results[n].before_ms).padStart(10)} ms → ${String(incMs).padStart(7)} ms   ` +
+        `${String(results[n].speedup + '×').padStart(7)}  ${results[n].roots_identical ? 'roots identical' : 'ROOTS DIFFER'}`
+      );
+    }
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------- 6. cost
 /**
  * Static gas model of LogAnchor.anchor(seq, root, org).
  *
@@ -281,6 +391,10 @@ async function runBench(opts = {}) {
   // The 50k ingest above left exactly 50k entries on disk — verify that.
   const verify = benchVerify(repeats, log);
   const merkle = benchMerkle([100, 10000], repeats, log);
+  // Anchor those same 50k entries and time the whole audit (chain + batch roots + checkpoints
+  // + receipts), then isolate the checkpoint pass old-way-vs-new-way at every size.
+  const audit = await benchAudit(repeats, log);
+  const checkpoints = benchCheckpoints([1000, 10000, 20000, 50000], repeats, log);
   const cost = benchCost([100, 1000], log);
   const wall = performance.now() - t0;
 
@@ -290,6 +404,10 @@ async function runBench(opts = {}) {
     `${verify.med_ms} ms to re-verify ${verify.entries.toLocaleString('en-US')} chained entries ` +
     `(${verify.us_per_entry} µs each) · ` +
     `${merkle[100].med_ms} ms per 100-leaf root, ${merkle[10000].med_ms} ms per 10k-leaf root · ` +
+    `${audit.med_audit_ms} ms full audit of ${audit.entries.toLocaleString('en-US')} anchored entries ` +
+    `(${audit.batches} checkpoints) · ` +
+    `checkpoint pass ${checkpoints[50000].before_ms} ms → ${checkpoints[50000].after_ms} ms at 50k ` +
+    `(${checkpoints[50000].speedup}×, roots identical) · ` +
     `~$${cost.by_epoch[0].usd_per_100k_events} per 100K events anchored at 100-event epochs (estimate)`;
 
   const result = {
@@ -307,6 +425,8 @@ async function runBench(opts = {}) {
     ingest,
     verify,
     merkle,
+    audit,
+    checkpoints,
     anchoring: cost,
     wall_ms: ms(wall),
     summary,
@@ -362,6 +482,23 @@ function printTable(r) {
   for (const k of Object.keys(r.merkle)) {
     line(pad(k, 10) + pad(r.merkle[k].med_ms, 12, true) + pad(r.merkle[k].us_per_leaf, 12, true));
   }
+  console.log('');
+
+  console.log('  AUDIT — full verify(): chain re-walk + batch roots + checkpoints + receipts');
+  console.log('  ' + pad('entries', 10) + pad('batches', 9, true) + pad('median ms', 12, true) + pad('µs/entry', 12, true) + pad('verdict', 12, true));
+  line(pad(r.audit.entries, 10) + pad(r.audit.batches, 9, true) + pad(r.audit.med_audit_ms, 12, true) +
+    pad(r.audit.us_per_entry, 12, true) + pad(r.audit.verdict, 12, true));
+  console.log('');
+
+  console.log('  CHECKPOINTS — re-deriving every cumulative root, before vs after');
+  console.log('  ' + pad('entries', 10) + pad('checkpoints', 13, true) + pad('before ms', 12, true) + pad('after ms', 12, true) + pad('speedup', 10, true) + pad('roots', 16, true));
+  for (const k of Object.keys(r.checkpoints)) {
+    const v = r.checkpoints[k];
+    line(pad(k, 10) + pad(v.checkpoints, 13, true) + pad(v.before_ms, 12, true) + pad(v.after_ms, 12, true) +
+      pad(v.speedup + '×', 10, true) + pad(v.roots_identical ? 'identical' : 'DIFFER', 16, true));
+  }
+  console.log('    before = merkleRoot(prefix) per batch (O(batches × entries)); after = one RFC 6962 accumulator pass');
+  console.log('    before column is a single sample; after is the median of the repeats above');
   console.log('');
 
   console.log('  ANCHORING — cost per 100K events, by epoch size');
