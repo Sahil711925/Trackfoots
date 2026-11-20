@@ -32,10 +32,11 @@ const store = require('../lib/store');
   const bare = (h) => String(h || '').toLowerCase().replace(/^0x/, '');
   for (const b of ledger.slice(-12)) {
     const onChain = await cl.readRoot(b.seq ?? b.batch);
-    const match = bare(onChain) === bare(b.root);
+    const expected = b.checkpointRoot || b.root;
+    const match = bare(onChain) === bare(expected);
     if (match) ok += 1;
     else bad += 1;
-    console.log(`  batch ${String(b.batch).padStart(3)}  ${match ? '✓ matches chain' : '✗ DIFFERS'}  ${b.root.slice(0, 18)}…`);
+    console.log(`  batch ${String(b.batch).padStart(3)}  ${match ? '✓ matches chain' : '✗ DIFFERS'}  ${expected.slice(0, 18)}…`);
     if (b.explorer) console.log(`         ${b.explorer}`);
   }
   console.log(`\n  ${ok} match, ${bad} differ\n`);

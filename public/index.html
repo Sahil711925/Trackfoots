@@ -181,7 +181,10 @@ function paint(s){
     <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t ${b.chain === 'LOCAL-SIMULATED' ? '' : 'yes'}">${b.chain === 'LOCAL-SIMULATED' ? 'local only' : 'on-chain'}</span></div>`).join('');
   const onChain = s.ledger.filter(b => b.chain !== 'LOCAL-SIMULATED').length;
   const chainInfo = s.chain || {};
-  document.getElementById('anchor-note').textContent = `${s.ledger.length} roots · ${onChain} on-chain`;
+  const cons = s.consistency || { ok: true, verifiedPairs: 0, totalPairs: 0 };
+  document.getElementById('anchor-note').textContent =
+    `${s.ledger.length} roots · ${onChain} on-chain · append-only ${cons.verifiedPairs}/${cons.totalPairs}`;
+  document.getElementById('anchor-note').style.color = cons.ok ? 'var(--green)' : 'var(--red)';
 
   const warn = document.getElementById('chainwarn');
   if (chainInfo.degraded) {

@@ -83,6 +83,6 @@ test('an inclusion proof for entry 250 rebuilds the published batch-3 root', () 
   assert.equal(p.index, 49); // 250 - 201
   const entries = store.readLogs().filter((r) => r.ok).map((r) => r.entry);
   const leaf = entries.find((e) => e.seq === 250).hash;
-  assert.equal(verifyProof(leaf, p.proof), p.root);
-  assert.equal(verifyProof(leaf, p.proof), ledger.find((b) => b.batch === 3).root);
+  assert.equal(verifyProof(leaf, p.proof, p.index, 100), p.root);
+  assert.equal(verifyProof(leaf, p.proof, p.index, 100), ledger.find((b) => b.batch === 3).root);
 });

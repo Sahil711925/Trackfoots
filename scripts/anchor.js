@@ -41,17 +41,25 @@ async function anchorAll({ verbose = true } = {}) {
     const slice = rows.slice(from, from + store.BATCH_SIZE);
     if (!slice.length) continue;
 
+    // Two roots, on purpose:
+    //   root           — a Merkle tree over this batch alone. Gives batch-level granularity,
+    //                    so verification can name the exact batch that changed.
+    //   checkpointRoot — a Merkle tree over EVERY entry so far. This is the CT-style
+    //                    checkpoint, and it is what makes consistency proofs possible:
+    //                    checkpoint N+1 must be an extension of checkpoint N.
     const root = merkleRoot(slice.map((e) => e.hash));
+    const checkpointRoot = merkleRoot(rows.slice(0, from + slice.length).map((e) => e.hash));
     const ts = new Date().toISOString();
 
-    let txHash = '0x' + sha256(prevTx + root + ts + b);
+    let txHash = '0x' + sha256(prevTx + checkpointRoot + ts + b);
     let chainName = 'LOCAL-SIMULATED';
     let explorer = null;
 
     if (cl) {
       try {
         const chainSeq = store.runBase() + b;
-        const res = await cl.anchor(root, chainSeq);
+        // The chain carries the cumulative checkpoint root, not the per-batch one.
+        const res = await cl.anchor(checkpointRoot, chainSeq);
         txHash = res.txHash;
         chainName = process.env.CHAIN || 'amoy';
         explorer = cl.explorerUrl(res.txHash);
@@ -69,6 +77,7 @@ async function anchorAll({ verbose = true } = {}) {
       toSeq: slice[slice.length - 1].seq,
       count: slice.length,
       root,
+      checkpointRoot,
       ts,
       txHash,
       chain: chainName,

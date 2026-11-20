@@ -43,13 +43,20 @@ we demonstrate him.
 
 1. **Every entry is chained.** `hash = sha256(prevHash ‖ seq ‖ ts ‖ actor ‖ action ‖ meta)`. Change one line and
    every hash after it breaks.
-2. **Every 100 entries become one fingerprint.** A Merkle root — 32 bytes covering a whole batch.
-3. **The root is published on-chain.** `LogAnchor.anchor(seq, root, org)` stores it and **refuses to ever
-   overwrite that sequence number**. Not by the operator, not by the attacker.
+2. **Every 100 entries become two fingerprints.** A **batch root** (this batch only — finds the tampered batch)
+   and a **checkpoint root** (every entry so far — CT-style, and what the chain stores).
+3. **The checkpoint root is published on-chain.** `LogAnchor.anchor(seq, root, org)` stores it and **refuses to
+   ever overwrite that sequence number**. Not by the operator, not by the attacker.
 4. **Every write also issues a receipt.** The content fingerprint goes to the auditor at write time, outside the
    server, so deleted lines can later be proven to have existed.
 
-Verification then compares three things: the recomputed chain, the recomputed roots, and the receipts.
+Verification then compares four things: the recomputed chain, the recomputed batch roots, the recomputed
+checkpoint roots, and the receipts. Consistency proofs additionally link checkpoint N to checkpoint N+1, so the
+log is provably **append-only across time** — not just tamper-evident within a batch.
+
+The Merkle implementation follows **RFC 6962** (Certificate Transparency): `SHA256(0x00 ‖ leaf)` for leaves,
+`SHA256(0x01 ‖ l ‖ r)` for nodes, subtrees split at the largest power of two, and `MTH({}) = SHA256()`. The
+test suite recomputes every expected root from the RFC's formulas rather than from the implementation.
 
 ---
 
@@ -90,6 +97,7 @@ starts the server and opens the browser.
 | `lib/proof.js` | Inclusion proof for a single entry |
 | `lib/bundle.js` | Printable auditor evidence bundle (single entry, A4, self-contained) |
 | `lib/liveness.js` | Detects anchoring that has silently stopped |
+| `lib/consistency.js` | Proves checkpoint N+1 extends checkpoint N (append-only across time) |
 | `lib/chain.js` | Contract compile, deploy, anchor, read-back |
 | `lib/seed.js` | Synthetic log generator (1,200 demo entries) |
 | `lib/env.js` | Config loader — `.env` always wins over inherited shell values |
@@ -97,7 +105,7 @@ starts the server and opens the browser.
 | `public/index.html` | The demo UI — one file, no build step |
 | `cli.js` | Terminal auditor (`node cli.js verify`) |
 | `scripts/` | Entry points: seed, anchor, attack, deploy, wallet, prove, bundle, chain verification |
-| `tests/` | 55 automated tests (`npm test`), CI on every push |
+| `tests/` | 61 automated tests (`npm test`), CI on every push |
 | `docs/` | Architecture, demo script, judge Q&A, **prior art**, build checklist |
 | `LICENSE` | MIT |
 | `START_DEMO.bat` / `VERIFY_CHAIN.bat` | One-click launch and one-click chain proof |
@@ -112,8 +120,9 @@ node cli.js verify                # -> TAMPERED, batch 3 named, 34 entries recov
 node scripts/verify-chain.js      # -> re-reads roots from the chain: 12 match, 0 differ
 node scripts/prove.js 250         # -> inclusion proof: entry 250 was inside the published batch
 node scripts/export-bundle.js 250 # -> exports/bundle-250.html, the auditor artifact
-npm test                          # -> 55 passing
+npm test                          # -> 61 passing
 npm run liveness                  # -> HEALTHY / STALE, detects anchoring that stopped
+npm run consistency               # -> APPEND-ONLY: 11/11 checkpoint pairs extend
 ```
 
 Expected output of the middle step, which is the whole point:

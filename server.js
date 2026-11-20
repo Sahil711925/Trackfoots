@@ -17,6 +17,7 @@ const { seed } = require('./lib/seed');
 const { anchorAll } = require('./scripts/anchor');
 const { buildProof } = require('./lib/proof');
 const { buildBundle } = require('./lib/bundle');
+const { checkChainOfCheckpoints } = require('./lib/consistency');
 
 const PORT = Number(process.env.PORT || 5173);
 const ROOT = __dirname;
@@ -55,10 +56,18 @@ function state() {
   const ledger = store.readLedger();
   const chainExpected = String(process.env.ANCHOR_ON_CHAIN || '').toLowerCase() === 'true';
   const onChain = ledger.filter((b) => b.chain !== 'LOCAL-SIMULATED').length;
+  let consistency = { ok: true, verifiedPairs: 0, totalPairs: 0 };
+  try {
+    const c = checkChainOfCheckpoints();
+    consistency = { ok: c.ok, verifiedPairs: c.verifiedPairs, totalPairs: c.totalPairs };
+  } catch (err) {
+    consistency = { ok: false, verifiedPairs: 0, totalPairs: 0, error: err.message };
+  }
   return {
     entries,
     total: logs.length,
     ledger: ledger.slice().reverse(),
+    consistency,
     chain: {
       expected: chainExpected,
       network: process.env.CHAIN || null,
@@ -82,6 +91,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/state') return json(res, 200, state());
+
+  if (req.method === 'GET' && (url.pathname === '/api/consistency' || url.pathname === '/api/append-only')) {
+    try {
+      return json(res, 200, checkChainOfCheckpoints());
+    } catch (err) {
+      return json(res, 500, { error: err.message });
+    }
+  }
 
   // inclusion proof for one entry: proves it belonged to a published batch
   if (req.method === 'GET' && url.pathname === '/api/proof') {

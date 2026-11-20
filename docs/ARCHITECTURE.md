@@ -71,6 +71,32 @@ An attacker who edits one early batch and stops breaks monotonicity. The auditor
 if the last batch is clean it falls back to a linear scan. `report.rootCheckMethod` records which path ran, so the
 report never claims a guarantee it did not use.
 
+## Two roots, and why
+
+Each checkpoint publishes two values:
+
+| Root | Covers | Used for |
+|---|---|---|
+| `root` | this batch's 100 leaves | naming the exact tampered batch |
+| `checkpointRoot` | **every entry so far** | what the chain stores; consistency proofs |
+
+The chain only carries the checkpoint root, because that is the value an auditor can independently check and the
+one that must be impossible to fork. The batch root stays local so verification keeps its granularity: "batch 7
+changed", not just "the log changed".
+
+## Consistency — append-only across time
+
+Inclusion proves *"entry 250 is in this tree"*. It says nothing about whether today's tree contains yesterday's.
+
+An operator could serve an auditor checkpoint A and an investigator checkpoint B, each internally consistent, each
+with valid inclusion proofs. Nothing in a per-batch design detects that.
+
+`lib/consistency.js` implements RFC 6962 §2.1.3: for consecutive checkpoints it produces a short proof that the
+older tree is a prefix of the newer one, and verifies it against the two published roots only. A fork fails because
+two different histories cannot both extend the same published root.
+
+`npm run consistency` reports every pair; the UI shows `append-only 11/11`.
+
 ## Threat model
 
 | Adversary | Capability | Result |

@@ -38,13 +38,21 @@ Then, if they want more:
 > by the hash chain only. The fix is per-write receipts — we already do them auditor-side, we just haven't made them
 > the primary path." *(Volunteering this scores; almost nobody does.)*
 
-**5. "Why is binary search valid for finding the bad batch?"**
+**5. "What stops you serving me a different history than you served the auditor?"**
+> "That's what the checkpoint roots and consistency proofs are for. We publish the Merkle root of *every entry so
+> far* — not just the batch — and the chain fixes it at that sequence number. A consistency proof then shows that
+> today's checkpoint extends yesterday's. Two internally consistent but different histories can't both extend the
+> same published checkpoint, so a fork is detectable, not just tampering. That's RFC 6962, the Certificate
+> Transparency algorithm — we follow it rather than hashing pairs ad hoc: 0x00-prefixed leaves, 0x01-prefixed
+> nodes, subtrees split at the largest power of two."
+
+**6. "Why is binary search valid for finding the bad batch?"**
 > "Because damage is monotone when it reaches the last batch — one changed hash invalidates every later hash, so
 > 'is this batch bad' is false-then-true, which is exactly what binary search needs. We don't assume it: the auditor
 > tests whether the last batch is bad, and falls back to a linear scan when an attacker tampers with one early batch
 > and stops. The report records which method ran."
 
-**6. "Did you build this?"**
+**7. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

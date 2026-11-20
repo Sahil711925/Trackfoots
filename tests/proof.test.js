@@ -101,7 +101,7 @@ test('the proof rebuilds the published root from the recomputed entry hash', () 
   assert.match(p.entryHash, HASH_RE);
 
   // Independent rebuild from the published proof steps, not from the module's own value.
-  const rebuilt = verifyProof(p.entryHash, p.proofSteps);
+  const rebuilt = verifyProof(p.entryHash, p.proofSteps, p.leafIndex, p.leafCount);
   assert.equal(rebuilt, p.publishedRoot, 'leaf + proof must reproduce the published root');
   assert.equal(p.rebuiltRoot, p.publishedRoot);
   assert.equal(p.recomputedRoot, p.publishedRoot, 'merkle root of the batch on disk matches too');
@@ -114,9 +114,11 @@ test('the proof rebuilds the published root from the recomputed entry hash', () 
   assert.equal(p.storedHash, entry.hash);
 });
 
-test('proofLength is 7 for a 100-leaf batch (log2(100) rounded up)', () => {
+test('proofLength stays within log2(100) bounds for a 100-leaf batch', () => {
   const p = buildProof(42);
-  assert.equal(p.proofLength, 7);
+  // RFC 6962 trees are left-complete, not level-balanced: the rightmost leaf sits shallower
+  // than the leftmost, so the audit path length varies between ceil(log2(100))-3 and 7.
+  assert.ok(p.proofLength >= 4 && p.proofLength <= 7, `unexpected proof length ${p.proofLength}`);
   assert.equal(p.proofSteps.length, 7);
   for (const step of p.proofSteps) {
     assert.ok(step.side === 'left' || step.side === 'right', `bad side: ${step.side}`);
@@ -132,8 +134,8 @@ test('the proof holds for the first and last leaf of the batch', () => {
   assert.equal(first.leafIndex, 0);
   assert.equal(last.verified, true);
   assert.equal(last.leafIndex, 99);
-  assert.equal(verifyProof(first.entryHash, first.proofSteps), batch.root);
-  assert.equal(verifyProof(last.entryHash, last.proofSteps), batch.root);
+  assert.equal(verifyProof(first.entryHash, first.proofSteps, first.leafIndex, first.leafCount), batch.root);
+  assert.equal(verifyProof(last.entryHash, last.proofSteps, last.leafIndex, last.leafCount), batch.root);
 });
 
 test('buildProof() returns null for a seq that was never written', () => {
