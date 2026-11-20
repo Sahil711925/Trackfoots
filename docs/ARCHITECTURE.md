@@ -94,3 +94,13 @@ depend on trusting the party under investigation.
 - Receipts are a directory, not a separate host.
 - No automated liveness alert when anchoring stops.
 - The demo chain is local; the contract is chain-agnostic.
+
+## Liveness alarm
+
+Tamper evidence protects the past; it says nothing about the present. An attacker who blocks outbound
+traffic stops anchoring without editing a byte, so new entries are unwitnessed and `verify` still says
+VERIFIED — there is nothing published to compare them against. `lib/liveness.js` (CLI:
+`scripts/check-liveness.js`, exit 0 healthy / 2 stale, `--json`) closes that gap from two files only:
+it counts entries past the last batch's `toSeq`, measures the age of the last batch that has fresh
+traffic behind it, and flags a ledger whose `seq` fails to advance by exactly 1 within a run. It cannot
+restore anchoring, but it names the exact moment the witness went quiet.

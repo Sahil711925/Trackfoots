@@ -20,6 +20,7 @@ const assert = require('node:assert/strict');
 const DATA = path.join(os.tmpdir(), `witness-test-bundle-${process.pid}-${Date.now()}`);
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 process.env.BATCH_SIZE = '100';
 
 const REPO = path.resolve(__dirname, '..');
@@ -28,6 +29,7 @@ const { sha256, merkleRoot } = require(path.join(REPO, 'lib', 'merkle.js'));
 const { buildBundle, EXPORTS_DIR } = require(path.join(REPO, 'lib', 'bundle.js'));
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 
 const SEQ = 42; // not one of the bundles already sitting in exports/
 const OUT = path.join(REPO, 'exports', `bundle-${SEQ}.html`);

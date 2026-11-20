@@ -48,3 +48,13 @@ Status as of Fri 20 Nov, 17:20 · ~19h40m to submission.
 - No automated tests.
 - All log data is synthetic (allowed by the track rule; declared in README).
 - I wrote ~95% of the code. You must be able to explain it, or the depth score collapses under questioning.
+
+## Round 2 — added after the parallel agent pass
+
+- [x] Test coverage for `lib/proof.js`, `lib/bundle.js`, HTTP API — suite is now **55 tests**
+- [x] **FIXED: flaky test suite** — `lib/env.js` forced `ANCHOR_ON_CHAIN` from `.env`, so tests dialled the live chain, collided on nonces and hung 2 runs out of 3. `WITNESS_TEST=1` now disables forcing; three consecutive runs are green.
+- [x] **Liveness alarm** — `lib/liveness.js` + `npm run liveness` (unanchored backlog, anchor age, sequence gaps)
+- [x] `LICENSE` (MIT), GitHub Actions CI, `engines`/`start` metadata
+- [x] README screenshot, repo map, CI badge
+- [x] Product renamed to **Trackfoots** everywhere
+- [x] Public repo: github.com/Sahil711925/Trackfoots

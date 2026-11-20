@@ -26,6 +26,7 @@ const DATA = path.join(os.tmpdir(), `witness-test-api-${process.pid}-${Date.now(
 process.env.PORT = String(PORT);
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 process.env.BATCH_SIZE = '100';
 
 const REPO = path.resolve(__dirname, '..');
@@ -46,6 +47,7 @@ http.createServer = realCreateServer;
 // .env. Reset both keys so any anchoring done through the API stays local and in-temp.
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 
 async function api(method, route, body) {
   const init = { method };
@@ -159,8 +161,14 @@ test('POST /api/attack flips VERIFIED -> TAMPERED, and /api/reset restores VERIF
   assert.equal(state.json.report.verdict, 'TAMPERED');
   assert.ok(state.json.total < 1200, 'entries were deleted');
 
-  const proofGone = await api('GET', '/api/proof?seq=205');
-  assert.equal(proofGone.status, 404, 'a deleted entry has no proof');
+  // An entry that still exists but whose batch root no longer reproduces must not verify.
+  const stale = await api('GET', '/api/proof?seq=205');
+  assert.equal(stale.status, 200, 'seq 205 still exists after renumbering');
+  assert.equal(stale.json.verified, false, 'the published root no longer represents this batch');
+  assert.equal(stale.json.hashMatches, true, 'smart mode left a self-consistent hash');
+
+  const gone = await api('GET', `/api/proof?seq=${attacked.json.total + 1}`);
+  assert.equal(gone.status, 404, 'entries past the shrunken end of the log have no proof');
 
   const reset = await api('POST', '/api/reset');
   assert.equal(reset.status, 200);

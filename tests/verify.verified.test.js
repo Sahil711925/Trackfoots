@@ -11,7 +11,8 @@ const assert = require('node:assert/strict');
 
 const DATA = path.join(os.tmpdir(), `witness-test-verified-${process.pid}-${Date.now()}`);
 process.env.WITNESS_DATA = DATA;
-process.env.ANCHOR_ON_CHAIN = 'false'; // never dial a chain during tests
+process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1'; // never dial a chain during tests
 process.env.BATCH_SIZE = '100';
 
 const REPO = path.resolve(__dirname, '..');

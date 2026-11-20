@@ -18,6 +18,7 @@ const assert = require('node:assert/strict');
 const DATA = path.join(os.tmpdir(), `witness-test-proof-${process.pid}-${Date.now()}`);
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 process.env.BATCH_SIZE = '100';
 
 const REPO = path.resolve(__dirname, '..');
@@ -29,6 +30,7 @@ const { buildProof, formatProofText } = require(path.join(REPO, 'lib', 'proof.js
 // proof.js requires lib/env, which forces a few keys from .env. Put ours back.
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 
 const HASH_RE = /^[0-9a-f]{64}$/;
 let batch; // the single published batch covering seq 1-100
@@ -162,8 +164,9 @@ test('buildProof() returns false when the entry content is edited but its hash i
   const idx = lines.findIndex((l) => JSON.parse(l).seq === 42);
   assert.ok(idx >= 0, 'entry 42 must be present in the log file');
   const before = JSON.parse(lines[idx]);
+  assert.notEqual(before.action, 'sudo su', 'test edit must actually change the content');
 
-  lines[idx] = JSON.stringify({ ...before, action: 'login success' }); // silent edit
+  lines[idx] = JSON.stringify({ ...before, action: 'sudo su' }); // silent edit
   fs.writeFileSync(file, lines.join('\n') + '\n');
 
   try {

@@ -1,5 +1,7 @@
 # Trackfoots
 
+[![CI](https://github.com/Sahil711925/Trackfoots/actions/workflows/ci.yml/badge.svg)](https://github.com/Sahil711925/Trackfoots/actions/workflows/ci.yml)
+
 **Tamper-evident security logs — the proof survives the attacker.**
 
 A log store whose integrity can be *proved* after a breach, even when the attacker has root on the server.
@@ -89,6 +91,7 @@ starts the server and opens the browser.
 | `lib/attack.js` | Two attacker profiles — naive deletions and a careful forger |
 | `lib/proof.js` | Inclusion proof for a single entry |
 | `lib/bundle.js` | Printable auditor evidence bundle (single entry, A4, self-contained) |
+| `lib/liveness.js` | Detects anchoring that has silently stopped |
 | `lib/chain.js` | Contract compile, deploy, anchor, read-back |
 | `lib/seed.js` | Synthetic log generator (1,200 demo entries) |
 | `lib/env.js` | Config loader — `.env` always wins over inherited shell values |
@@ -96,8 +99,9 @@ starts the server and opens the browser.
 | `public/index.html` | The demo UI — one file, no build step |
 | `cli.js` | Terminal auditor (`node cli.js verify`) |
 | `scripts/` | Entry points: seed, anchor, attack, deploy, wallet, prove, bundle, chain verification |
-| `tests/` | 32 automated tests (`npm test`) |
+| `tests/` | 55 automated tests (`npm test`), CI on every push |
 | `docs/` | Architecture, demo script, judge Q&A, build checklist |
+| `LICENSE` | MIT |
 | `START_DEMO.bat` / `VERIFY_CHAIN.bat` | One-click launch and one-click chain proof |
 
 ---
@@ -110,7 +114,8 @@ node cli.js verify                # -> TAMPERED, batch 3 named, 34 entries recov
 node scripts/verify-chain.js      # -> re-reads roots from the chain: 12 match, 0 differ
 node scripts/prove.js 250         # -> inclusion proof: entry 250 was inside the published batch
 node scripts/export-bundle.js 250 # -> exports/bundle-250.html, the auditor artifact
-npm test                          # -> 32 passing
+npm test                          # -> 55 passing
+npm run liveness                  # -> HEALTHY / STALE, detects anchoring that stopped
 ```
 
 Expected output of the middle step, which is the whole point:
@@ -136,7 +141,8 @@ published root still disagrees.
 - **Anchor window.** Entries written since the last batch was published are protected by the hash chain only.
   Closing it needs immediate anchoring (more gas) or per-write receipts promoted to the primary path.
 - **Anchoring liveness.** An attacker who blocks outbound traffic stops new anchors. History cannot be rewritten,
-  but new entries go unwitnessed; this is detectable as a gap in sequence numbers (alarm not yet implemented).
+  but new entries go unwitnessed. `npm run liveness` detects this (unanchored backlog, anchor age, sequence gaps)
+  and exits non-zero; it is not yet wired to paging or email.
 - **Signing key.** If the anchor key is stolen, the attacker can publish *new* roots. He can never alter old ones.
 - **Receipts.** In this build they live in a separate directory on the same machine — a trust-domain simulation,
   not real isolation.

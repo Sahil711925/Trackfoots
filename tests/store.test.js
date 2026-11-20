@@ -12,6 +12,7 @@ const assert = require('node:assert/strict');
 const DATA = path.join(os.tmpdir(), `witness-test-store-${process.pid}-${Date.now()}`);
 process.env.WITNESS_DATA = DATA;
 process.env.ANCHOR_ON_CHAIN = 'false';
+process.env.WITNESS_TEST = '1';
 process.env.BATCH_SIZE = '100';
 
 const REPO = path.resolve(__dirname, '..');
