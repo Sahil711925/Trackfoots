@@ -1,0 +1,56 @@
+Nov 20 02:14:07 web-01 sshd[2201]: Accepted publickey for rahul from 103.21.44.9 port 51234 ssh2: RSA SHA256:q3rT9xLm2VbN8kPwYc4dHs6fJg0aZe1u
+Nov 20 02:14:07 web-01 sshd[2201]: pam_unix(sshd:session): session opened for user rahul by (uid=0)
+Nov 20 02:14:12 web-01 sudo: rahul : TTY=pts/0 ; PWD=/home/rahul ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Nov 20 02:14:19 web-01 sudo: rahul : TTY=pts/0 ; PWD=/home/rahul ; USER=root ; COMMAND=/bin/cat /etc/passwd
+Nov 20 02:15:03 web-01 sshd[2210]: Accepted password for priya from 103.21.44.18 port 51880 ssh2
+Nov 20 02:15:03 web-01 sshd[2210]: pam_unix(sshd:session): session opened for user priya by priya(uid=0)
+Nov 20 02:15:44 web-01 sshd[2214]: Failed password for vikram from 103.21.44.27 port 49212 ssh2
+Nov 20 02:15:51 web-01 sshd[2214]: Failed password for vikram from 103.21.44.27 port 49212 ssh2
+Nov 20 02:15:59 web-01 sshd[2214]: Failed password for vikram from 103.21.44.27 port 49212 ssh2
+Nov 20 02:16:04 web-01 sshd[2214]: Connection closed by authenticating user vikram 103.21.44.27 port 49212 [preauth]
+Nov 20 02:16:31 web-01 sshd[2219]: Invalid user test from 45.33.12.7 port 40022
+Nov 20 02:16:31 web-01 sshd[2219]: Failed password for invalid user test from 45.33.12.7 port 40022 ssh2
+Nov 20 02:16:33 web-01 sshd[2219]: Invalid user admin from 45.33.12.7 port 40024
+Nov 20 02:16:33 web-01 sshd[2219]: Failed password for invalid user admin from 45.33.12.7 port 40024 ssh2
+Nov 20 02:16:35 web-01 sshd[2219]: Invalid user oracle from 45.33.12.7 port 40026
+Nov 20 02:16:36 web-01 sshd[2219]: Failed password for invalid user oracle from 45.33.12.7 port 40026 ssh2
+Nov 20 02:16:38 web-01 sshd[2219]: Invalid user postgres from 45.33.12.7 port 40028
+Nov 20 02:16:39 web-01 sshd[2219]: Failed password for invalid user postgres from 45.33.12.7 port 40028 ssh2
+Nov 20 02:16:41 web-01 sshd[2219]: Invalid user ubuntu from 45.33.12.7 port 40030
+Nov 20 02:16:42 web-01 sshd[2219]: Failed password for invalid user ubuntu from 45.33.12.7 port 40030 ssh2
+Nov 20 02:16:44 web-01 sshd[2219]: Invalid user git from 45.33.12.7 port 40032
+Nov 20 02:16:45 web-01 sshd[2219]: Failed password for invalid user git from 45.33.12.7 port 40032 ssh2
+Nov 20 02:16:47 web-01 sshd[2219]: Invalid user deploy from 45.33.12.7 port 40034
+Nov 20 02:16:48 web-01 sshd[2219]: Failed password for invalid user deploy from 45.33.12.7 port 40034 ssh2
+Nov 20 02:16:52 web-01 sshd[2231]: Accepted publickey for karthik from 103.21.44.51 port 52002 ssh2: ED25519 SHA256:9dLpQ2wX7vB4nM8kR1tY6zC3fH5jA0sE
+Nov 20 02:16:52 web-01 sshd[2231]: pam_unix(sshd:session): session opened for user karthik by (uid=0)
+Nov 20 02:17:06 web-01 sudo: karthik : TTY=pts/1 ; PWD=/srv/app ; USER=root ; COMMAND=/usr/bin/docker ps
+Nov 20 02:17:41 web-01 sshd[2231]: pam_unix(sshd:session): session closed for user karthik
+Nov 20 02:18:12 web-01 sshd[2240]: Accepted publickey for meera from 103.21.44.64 port 53110 ssh2: ED25519 SHA256:2aVn8Kd4Lq6Wp0Zr7Tm5Yb9Xc1Fg3Hj
+Nov 20 02:18:12 web-01 sshd[2240]: pam_unix(sshd:session): session opened for user meera by (uid=0)
+Nov 20 02:18:30 web-01 sudo: meera : 3 incorrect password attempts ; TTY=pts/2 ; PWD=/home/meera ; USER=root ; COMMAND=/usr/bin/apt update
+Nov 20 02:19:02 web-01 sshd[2240]: pam_unix(sshd:session): session closed for user meera
+Nov 20 02:19:44 web-01 sshd[2249]: Accepted password for arjun from 103.21.44.72 port 54010 ssh2
+Nov 20 02:19:44 web-01 sshd[2249]: pam_unix(sshd:session): session opened for user arjun by arjun(uid=0)
+Nov 20 02:20:09 web-01 sshd[2255]: Failed password for sneha from 103.21.44.88 port 55022 ssh2
+Nov 20 02:20:17 web-01 sshd[2255]: Accepted password for sneha from 103.21.44.88 port 55024 ssh2
+Nov 20 02:20:17 web-01 sshd[2255]: pam_unix(sshd:session): session opened for user sneha by sneha(uid=0)
+Nov 20 02:21:05 web-01 sshd[2261]: Connection closed by authenticating user arjun 103.21.44.72 port 54010 [preauth]
+Nov 20 02:22:37 web-01 sshd[2268]: Accepted publickey for imran from 103.21.44.93 port 56120 ssh2: RSA SHA256:7bNc2Xf5Gj8Kl1Mp4Qr7St0Vw3Yz6Ad
+Nov 20 02:22:37 web-01 sshd[2268]: pam_unix(sshd:session): session opened for user imran by (uid=0)
+Nov 20 02:23:11 web-01 sudo: imran : TTY=pts/3 ; PWD=/var/log ; USER=root ; COMMAND=/usr/bin/tail -n 200 /var/log/auth.log
+Nov 20 02:24:02 web-01 sshd[2268]: pam_unix(sshd:session): session closed for user imran
+Nov 20 02:24:48 web-01 sshd[2280]: Failed password for root from 45.33.12.7 port 40100 ssh2
+Nov 20 02:24:55 web-01 sshd[2280]: Failed password for root from 45.33.12.7 port 40100 ssh2
+Nov 20 02:25:03 web-01 sshd[2280]: Failed password for root from 45.33.12.7 port 40100 ssh2
+Nov 20 02:25:11 web-01 sshd[2280]: error: maximum authentication attempts exceeded for root from 45.33.12.7 port 40100 ssh2 [preauth]
+Nov 20 02:25:14 web-01 sshd[2280]: Disconnecting authenticating user root 45.33.12.7 port 40100: Too many authentication failures [preauth]
+Nov 20 02:26:20 web-01 sshd[2291]: Accepted publickey for divya from 103.21.44.101 port 57234 ssh2: ED25519 SHA256:5kHm1Nq8Rt3Wv6Yz9Bc2Df4Gh7Jl0P
+Nov 20 02:26:20 web-01 sshd[2291]: pam_unix(sshd:session): session opened for user divya by (uid=0)
+Nov 20 02:27:44 web-01 sudo: divya : TTY=pts/4 ; PWD=/home/divya ; USER=root ; COMMAND=/usr/sbin/iptables -L -n
+Nov 20 02:28:30 web-01 sshd[2291]: pam_unix(sshd:session): session closed for user divya
+Nov 20 02:29:58 web-01 sshd[2302]: Accepted publickey for ananya from 103.21.44.115 port 58340 ssh2: RSA SHA256:8cQd4Vg7Jm1Kp5Ws8Zx2Bn6Ft9Hy3Lr
+Nov 20 02:31:58 web-01 sshd[2244]: Accepted publickey for 
+^@^@^@^@^@ web-01 sshd: write error, rotated mid-line
+-- MARK --
+Nov 20 02:99:01 web-01 sshd[2201]: session opened for user rahul

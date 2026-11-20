@@ -10,3 +10,6 @@ state.json
 deployments.json
 exports/
 *.html.bak
+
+# sample log files are fixtures, not noise
+!samples/*.log

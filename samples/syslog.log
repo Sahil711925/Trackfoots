@@ -1,0 +1,52 @@
+Nov 20 02:14:07 web-01 systemd[1]: Started Session 12 of user rahul.
+Nov 20 02:14:07 web-01 systemd-logind[712]: New session 12 of user rahul.
+Nov 20 02:14:12 web-01 CRON[2205]: (root) CMD (/usr/local/bin/backup-orders.sh)
+Nov 20 02:14:19 web-01 kernel: [1204.118203] audit: type=1400 audit(1763585047.412:452): apparmor="DENIED" operation="open" profile="/usr/sbin/nginx" name="/etc/shadow" pid=2211 comm="nginx"
+Nov 20 02:14:26 web-01 systemd[1]: Reloading nginx HTTP server...
+Nov 20 02:14:27 web-01 nginx[2216]: 2026/11/20 02:14:27 [warn] 2216#2216: conflicting server name "api.trackfoots.dev" on 0.0.0.0:443
+Nov 20 02:14:27 web-01 systemd[1]: Reloaded nginx HTTP server.
+Nov 20 02:14:44 web-01 systemd[1]: Starting Daily apt upgrade and clean activities...
+Nov 20 02:15:03 web-01 systemd[1]: Started Session 13 of user priya.
+Nov 20 02:15:03 web-01 systemd-logind[712]: New session 13 of user priya.
+Nov 20 02:15:22 web-01 postgres[1180]: [2-1] LOG:  checkpoint starting: time
+Nov 20 02:15:31 web-01 postgres[1180]: [2-1] LOG:  checkpoint complete: wrote 1422 buffers (8.7%); 0 WAL file(s) added, 0 removed, 2 recycled
+Nov 20 02:15:44 web-01 sshd[2214]: Failed password for vikram from 103.21.44.27 port 49212 ssh2
+Nov 20 02:16:04 web-01 kernel: [1315.884102] TCP: request_sock_TCP: Possible SYN flooding on port 443. Sending cookies.  Check SNMP counters.
+Nov 20 02:16:31 web-01 sshd[2219]: Invalid user test from 45.33.12.7 port 40022
+Nov 20 02:16:52 web-01 systemd[1]: Started Session 14 of user karthik.
+Nov 20 02:16:52 web-01 systemd-logind[712]: New session 14 of user karthik.
+Nov 20 02:17:04 web-01 systemd-timesyncd[655]: Timed out waiting for reply from 103.21.44.1:123 (time.cloudflare.com).
+Nov 20 02:17:06 web-01 systemd-timesyncd[655]: Contacted time server 162.159.200.1:123 (time.cloudflare.com).
+Nov 20 02:17:06 web-01 systemd-timesyncd[655]: Initial clock synchronization to Fri 2026-11-20 02:17:06.418253 IST.
+Nov 20 02:17:41 web-01 systemd[1]: session-14.scope: Deactivated successfully.
+Nov 20 02:18:12 web-01 systemd[1]: Started Session 15 of user meera.
+Nov 20 02:18:30 web-01 sudo[2238]: meera : 3 incorrect password attempts ; TTY=pts/2 ; PWD=/home/meera ; USER=root ; COMMAND=/usr/bin/apt update
+Nov 20 02:19:02 web-01 systemd[1]: session-15.scope: Deactivated successfully.
+Nov 20 02:19:44 web-01 systemd[1]: Started Session 16 of user arjun.
+Nov 20 02:20:01 web-01 CRON[2252]: (www-data) CMD (/usr/bin/php /srv/app/artisan schedule:run)
+Nov 20 02:20:09 web-01 systemd-resolved[660]: Using degraded feature set UDP instead of UDP+EDNS0 for DNS server 103.21.44.1.
+Nov 20 02:20:44 web-01 snapd[889]: storehelpers.go:745: cannot refresh: snap has no updates available
+Nov 20 02:21:05 web-01 systemd-logind[712]: Removed session 16.
+Nov 20 02:21:33 web-01 kernel: [1644.021884] EXT4-fs (sda1): mounted filesystem 8f21c4a2-77ab-4d5e-9c11-2b6f0d8ae314 r/w with ordered data mode
+Nov 20 02:22:02 web-01 kube-probe[2272]: GET /health 200 15 0.412ms
+Nov 20 02:22:37 web-01 systemd[1]: Started Session 17 of user imran.
+Nov 20 02:22:37 web-01 systemd-logind[712]: New session 17 of user imran.
+Nov 20 02:23:11 web-01 sudo[2277]: imran : TTY=pts/3 ; PWD=/var/log ; USER=root ; COMMAND=/usr/bin/tail -n 200 /var/log/auth.log
+Nov 20 02:23:58 web-01 postgres[1180]: [3-1] LOG:  automatic vacuum of table "trackfoots.public.orders": index scans: 1
+Nov 20 02:24:02 web-01 systemd[1]: session-17.scope: Deactivated successfully.
+Nov 20 02:24:48 web-01 sshd[2280]: Failed password for root from 45.33.12.7 port 40100 ssh2
+Nov 20 02:25:03 web-01 sshd[2280]: Failed password for root from 45.33.12.7 port 40100 ssh2
+Nov 20 02:25:14 web-01 systemd[1]: Stopping User Manager for UID 1000...
+Nov 20 02:25:14 web-01 systemd[1]: Stopped User Manager for UID 1000.
+Nov 20 02:25:30 web-01 systemd[1]: Started Session 18 of user divya.
+Nov 20 02:26:20 web-01 systemd-logind[712]: New session 18 of user divya.
+Nov 20 02:27:44 web-01 sudo[2298]: divya : TTY=pts/4 ; PWD=/home/divya ; USER=root ; COMMAND=/usr/sbin/iptables -L -n
+Nov 20 02:28:30 web-01 systemd[1]: session-18.scope: Deactivated successfully.
+Nov 20 02:29:58 web-01 systemd[1]: Started Session 19 of user ananya.
+Nov 20 02:30:41 web-01 kernel: [2299.774102] TCP: request_sock_TCP: Possible SYN flooding on port 443. Sending cookies.  Check SNMP counters.
+Nov 20 02:31:12 web-01 dhclient[934]: DHCPREQUEST for 10.0.1.24 on eth0 to 10.0.1.1 port 67
+Nov 20 02:31:13 web-01 dhclient[934]: DHCPACK of 10.0.1.24 from 10.0.1.1
+Nov 02:31:14 web-01 systemd[1]: Clock skew detected, timestamps may be unreliable.
+[ 1203.559112] audit: type=1400 audit(1763585047.1:453): apparmor="STATUS" operation="profile_replace"
+-- Reboot --
+Nov 20 02:99:00 web-01 kernel: truncated write during rotation
