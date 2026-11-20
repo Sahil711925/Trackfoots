@@ -49,6 +49,18 @@ Have the terminal open in a second window, already `cd`-ed into the folder.
 
 ---
 
+## Optional beat (only if you have 20 spare seconds)
+
+Type `250` in the entry box, click **`Prove entry`**.
+
+> "This is an inclusion proof. Seven hashes prove that line 250 sat inside batch 3 when its root was published — without shipping the other ninety-nine lines. If he edits that line, the proof stops rebuilding the root, and it tells you the proof failed."
+
+Then click **`Evidence bundle`** and open the page it prints.
+
+> "And this is what the company hands the auditor. One page, one entry, with the transaction and the proof they can check themselves."
+
+---
+
 ## If the demo breaks
 
 | Problem | Do this |
