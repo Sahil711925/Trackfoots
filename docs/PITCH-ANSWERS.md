@@ -106,6 +106,52 @@ Then stop. Do not fill the silence.
 
 ---
 
+## 6. "What is Quai doing in this project? What's the use?"
+
+**The one-line answer:**
+
+> "Quai is the noticeboard where we pin the fingerprint. It's the one thing the attacker cannot reach."
+
+**In plain words:**
+
+> "Every hundred log lines become one fingerprint. We write that fingerprint to a smart contract on
+> Quai. The contract refuses to overwrite it. So from that moment, the fingerprint is public and
+> permanent — even for us. If the log on the server later disagrees with it, someone changed the log."
+
+**What exactly goes on-chain:** 32 bytes per 100 entries. No log lines, no names, no IPs. Just the
+fingerprint. That is also why it's cheap: about $0.0023 per batch on an L2, $2.30 per 100,000 lines.
+
+**Why it can't just be our own database:**
+
+> "Our database is on the same machine the attacker owns. That's the whole problem. Quai is the only
+> copy that was written before he arrived, and nobody — not him, not us — can change it afterwards."
+
+**What it lets a third party do:**
+
+> "An auditor, a court, or CERT-In can read that one number from the public chain and compare it with
+> the log we hand them. They don't have to trust our dashboard, our server, or our company."
+
+**What the contract actually has (if they ask technically):**
+
+- `anchor(seq, root, org)` — writes one fingerprint, once. A second write to the same slot reverts.
+- `rootOf(seq)` — anyone can read it back.
+- `count()` — how many fingerprints exist.
+- `owner` — who may publish new ones. Old ones stay frozen even if the key is stolen.
+
+**Status, said honestly:**
+
+> "The contract is built for Quai Orchard testnet — chain 15000 — and Quai's node priced our
+> deployment at 333,698 gas, so the integration is real. We couldn't fund the testnet account
+> because the faucet link moved. The demo runs the same contract on a local EVM; switching it to
+> Orchard is two commands once the account has gas."
+
+**If they ask "so the blockchain is just a timestamp?"**
+
+> "It's stronger than a timestamp. A timestamp authority proves a document existed. It does not prove
+> that the document you hold now is the one that was timestamped. The fingerprint proves both."
+
+---
+
 ## Never claim
 
 - "We invented the Merkle tree" — false, and the judge knows.
