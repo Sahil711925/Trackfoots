@@ -73,8 +73,7 @@
   .small{font-size:15.5px;color:var(--muted);max-width:58ch;margin:0 0 36px}
   .cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
   .seal{position:sticky;top:110px;display:flex;flex-direction:column;align-items:center;gap:18px}
-  .seal img{width:100%;max-width:280px;animation:spin 120s linear infinite;filter:drop-shadow(0 20px 60px rgba(255,122,47,.22))}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .seal img{width:100%;max-width:280px;filter:drop-shadow(0 20px 60px rgba(255,122,47,.22))}
   .seal .cap{font:500 10.5px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center}
 
   /* live ticker */
@@ -150,7 +149,14 @@
   .frame .url{margin-left:8px;color:var(--ink-soft)}
   .frame .live{margin-left:auto;color:var(--ok);display:flex;align-items:center;gap:6px}
   .frame .live::before{content:"";width:6px;height:6px;background:var(--ok);border-radius:50%;animation:pulse 2s infinite}
+  .frame .live.bad{color:var(--bad)}
+  .frame .live.bad::before{background:var(--bad)}
   .frame img{display:block;width:100%;height:auto}
+  .shots{display:grid;gap:30px}
+  .shotcap2{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 4px 0;
+    font:500 11px/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .shotcap2 b{color:var(--ok);font-weight:500}
+  .shotcap2 b.bad{color:var(--bad)}
 
   /* tables */
   .tablewrap{overflow-x:auto;border:1px solid var(--line)}
@@ -398,10 +404,26 @@
     <p>Every line, its hash, the batch it fell into, and whether the published root still matches. The red state
     isn't a mock-up — it's what the screen does after an attacker deletes 34 entries and recomputes every hash.</p>
 
-    <div class="frame reveal">
-      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="url">localhost:5173/app</span><span class="live">live</span></div>
-      <img src="/dashboard.png" alt="Trackfoots dashboard: a verified 1,200-entry log, published Merkle roots per batch, and a signed-receipt summary">
+    <div class="shots">
+      <figure class="frame reveal" style="margin:0">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="url">localhost:5173/app</span><span class="live">live</span></div>
+        <img src="/dashboard.png" alt="Trackfoots dashboard in the verified state: 1,200 entries, 12 published Merkle roots, hash chain intact">
+        <figcaption class="shotcap2">
+          <span>before · <b>1,200 entries · 12 roots · chain intact</b></span>
+          <span>every line matches what was recorded at write time</span>
+        </figcaption>
+      </figure>
+
+      <figure class="frame reveal" style="margin:0">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="url">localhost:5173/app</span><span class="live bad">after attack</span></div>
+        <img src="/img/tampered.png" alt="The same dashboard after 34 entries were deleted and every hash recomputed: integrity failed, batch 3's published root no longer matches">
+        <figcaption class="shotcap2">
+          <span>after · <b class="bad">34 deleted · every hash recomputed · caught</b></span>
+          <span>hash chain reported intact — only the published root exposed it</span>
+        </figcaption>
+      </figure>
     </div>
   </div>
 </section>
