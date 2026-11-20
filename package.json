@@ -29,7 +29,9 @@
     "incident": "node scripts/incident-report.js",
     "test": "node --test tests/*.test.js",
     "prove": "node scripts/prove.js",
-    "bundle": "node scripts/export-bundle.js"
+    "bundle": "node scripts/export-bundle.js",
+    "shipper": "node scripts/shipper.js",
+    "tenants": "node scripts/tenants.js"
   },
   "dependencies": {
     "ethers": "^6.17.0",

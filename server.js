@@ -159,6 +159,52 @@ const server = http.createServer(async (req, res) => {
     return res.end(html);
   }
 
+  if (req.method === 'GET' && (url.pathname === '/status' || url.pathname === '/status.html')) {
+    const file = path.join(ROOT, 'public', 'status.html');
+    if (!fs.existsSync(file)) {
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      return res.end('status page not built yet');
+    }
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    return res.end(fs.readFileSync(file));
+  }
+
+  /**
+   * Paginated, filterable entry list — the data source for search in the UI and for the public
+   * status page. Newest first, so offset 0 is the most recent line.
+   */
+  if (req.method === 'GET' && url.pathname === '/api/entries') {
+    const all = store.readLogs().filter((r) => r.ok).map((r) => r.entry);
+    const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+    const actor = url.searchParams.get('actor');
+    const from = url.searchParams.get('from');
+    const to = url.searchParams.get('to');
+
+    let list = all;
+    if (actor) list = list.filter((e) => e.actor === actor);
+    if (from) list = list.filter((e) => e.ts >= from);
+    if (to) list = list.filter((e) => e.ts <= to);
+    if (q) {
+      list = list.filter((e) =>
+        `${e.actor} ${e.action} ${JSON.stringify(e.meta || {})}`.toLowerCase().includes(q)
+      );
+    }
+
+    const total = list.length;
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 50, 1), 500);
+    const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0);
+    const newestFirst = list.slice().reverse();
+
+    return json(res, 200, {
+      total,
+      matched: total,
+      offset,
+      limit,
+      entries: newestFirst.slice(offset, offset + limit),
+      filters: { q: q || null, actor: actor || null, from: from || null, to: to || null },
+    });
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/alerts') {
     return json(res, 200, { alerts: alerts.recent(50), webhook: Boolean(process.env.ALERT_WEBHOOK) });
   }
