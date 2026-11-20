@@ -14,6 +14,7 @@ const store = require('./lib/store');
 const { verify } = require('./lib/verify');
 const { attack } = require('./lib/attack');
 const { seed } = require('./lib/seed');
+const { seedReal } = require('./lib/seed-real');
 const { anchorAll } = require('./scripts/anchor');
 const { buildProof } = require('./lib/proof');
 const { buildBundle } = require('./lib/bundle');
@@ -230,7 +231,9 @@ const server = http.createServer(async (req, res) => {
     return withLock(res, async () => {
       fs.rmSync(store.DATA, { recursive: true, force: true });
       store.ensure();
-      seed(1200);
+      // Real-format lines by default: the demo should look like a server, not a fixture.
+      // lib/seed-real falls back to synthetic entries if samples/ is missing.
+      seedReal(1200);
       await anchorAll({ verbose: false });
       return json(res, 200, state());
     });
