@@ -21,10 +21,13 @@
   .pill{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;padding:7px 13px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-transform:uppercase}
   .pill.ok{color:var(--green);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
   .pill.bad{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .pill.warn{color:var(--amber,#f59e0b);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)}
 
   .banner{border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px;background:var(--panel)}
   .banner.ok{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.09),rgba(34,197,94,.02))}
   .banner.bad{border-color:rgba(239,68,68,.35);background:linear-gradient(180deg,rgba(239,68,68,.12),rgba(239,68,68,.03))}
+  .banner.warn{border-color:rgba(245,158,11,.38);background:linear-gradient(180deg,rgba(245,158,11,.12),rgba(245,158,11,.03))}
+  .banner.warn h2{color:#f59e0b}
   .banner h2{margin:0 0 6px;font-size:17px;letter-spacing:.02em}
   .banner.ok h2{color:var(--green)} .banner.bad h2{color:var(--red)}
   .banner p{margin:0;color:var(--muted);font-size:13px}
@@ -200,14 +203,19 @@ function paint(s){
   const stamp = document.getElementById('lastcheck');
   if (stamp) stamp.textContent = 'live · updated ' + new Date().toLocaleTimeString('en-IN', { hour12: false });
   const r = s.report;
-  const tampered = r.verdict !== 'VERIFIED';
+  const noData = r.verdict === 'NO DATA';
+  const tampered = r.verdict !== 'VERIFIED' && !noData;
 
-  document.getElementById('pill').className = 'pill ' + (tampered ? 'bad' : 'ok');
-  document.getElementById('pill').textContent = tampered ? 'integrity failed' : 'integrity verified';
+  document.getElementById('pill').className = 'pill ' + (noData ? 'warn' : tampered ? 'bad' : 'ok');
+  document.getElementById('pill').textContent = noData ? 'no data' : tampered ? 'integrity failed' : 'integrity verified';
 
   const b = document.getElementById('banner');
-  b.className = 'banner ' + (tampered ? 'bad' : 'ok');
-  if (!tampered){
+  b.className = 'banner ' + (noData ? 'warn' : tampered ? 'bad' : 'ok');
+  if (noData) {
+    b.innerHTML = `<h2>⚠ Nothing to verify</h2><p>Zero entries on disk. An empty store passes every local comparison
+      trivially — which is exactly what a wiped directory looks like. If this deployment is supposed to hold logs,
+      the data directory was deleted. Read the chain: published roots still exist.</p>`;
+  } else if (!tampered){
     b.innerHTML = `<h2>✓ Logs verified</h2><p>${fmt(r.entriesOnDisk)} entries, ${fmt(r.batchesPublished)} published roots, hash chain intact. Every line matches what was recorded at write time.</p>`;
   } else {
     const bad = r.badBatches[0];

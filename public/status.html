@@ -336,6 +336,11 @@
       hero.className = 'hero v-green';
       setText($('verdict'), 'VERIFIED');
       setText($('verdictAside'), 'no tampering detected');
+    } else if (verdict === 'NO DATA') {
+      // An empty store is not evidence of integrity. Amber, never green, never "tampered".
+      hero.className = 'hero v-grey';
+      setText($('verdict'), 'NO DATA');
+      setText($('verdictAside'), 'nothing on disk — a wiped directory looks exactly like this');
     } else {
       hero.className = 'hero v-red';
       setText($('verdict'), 'TAMPERED');

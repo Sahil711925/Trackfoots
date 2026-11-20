@@ -112,8 +112,13 @@
   pre .cm{color:#6C757F}
 
   /* diagram */
-  .diagram{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--bg-2));padding:26px 22px 18px;margin-top:12px}
+  /* the diagram is drawn on paper, so it is presented as a printed exhibit rather than inverted */
+  .diagram{background:#FFFBF4;padding:22px 20px 18px;margin-top:12px;border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 6px rgba(255,251,244,.04)}
   .diagram img{width:100%;height:auto;display:block}
+  .exhibit{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 4px 0;margin-top:14px;
+    border-top:1px solid rgba(20,22,26,.14);font:500 11px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#6E6A63}
+  .exhibit b{color:#D94B12}
   .legend{display:flex;gap:26px;flex-wrap:wrap;padding:16px 4px 0;border-top:1px solid var(--line);margin-top:18px;font:12.5px/1.5 var(--mono);color:var(--muted)}
   .legend i{display:inline-block;width:9px;height:9px;margin-right:8px;vertical-align:middle}
   .legend .a{background:var(--bhagwa);border-radius:50%}
@@ -280,15 +285,14 @@
   <div class="wrap">
     <p class="eyebrow"><span>01</span> How it works</p>
     <h2>Sixteen lines, four hashes, <em>one root.</em></h2>
-    <p>Read it bottom to top. Every entry is hashed once as a leaf, then paired upward until a single 32-byte
+    <p>Read it left to right. Every entry is hashed once as a leaf, then paired upward until a single 32-byte
     root remains. That root is the only thing that goes on-chain — and the only thing an attacker cannot touch.</p>
 
     <div class="diagram reveal">
-      <img src="/img/tree.svg" alt="Flowchart: sixteen log entries hashed into sixteen leaves, paired upward through eight, four and two nodes to a single Merkle root, which is written once to the anchor contract. Two leaves are missing; one entry's proof path is highlighted.">
-      <div class="legend">
-        <span><i class="a"></i>one entry's proof path — 4 hashes, not 16</span>
-        <span><i class="b"></i>deleted after sealing — the root still commits to it</span>
-        <span><i class="c"></i>present leaf</span>
+      <img src="/img/tree.svg" alt="Five-stage flowchart: sixteen log entries hash-chained in arrival order, hashed into sixteen Merkle leaves, paired upward through eight, four and two nodes to a single root, which is written once to the anchor contract. Two leaves are missing; entry 7's proof path is highlighted in saffron.">
+      <div class="exhibit">
+        <span><b>Exhibit A</b> · one batch, sixteen entries, sealed</span>
+        <span>entry #7's proof: 4 hashes · 128 bytes</span>
       </div>
     </div>
 
@@ -406,7 +410,7 @@
   <div class="wrap">
     <p class="eyebrow"><span>05</span> Threat model</p>
     <h2>What it catches, and what it <em>can't tell you.</em></h2>
-    <p>Nine attacker capabilities, judged one at a time. This is the table an auditor actually wants, and it is the
+    <p>Ten attacker capabilities, judged one at a time. This is the table an auditor actually wants, and it is the
     reason the product is credible: the gaps are listed next to the wins.</p>
 
     <div class="tablewrap reveal">
@@ -419,7 +423,8 @@
           <tr><td><b>Rewrite every hash</b></td><td style="color:var(--ok)">Yes</td><td>Only the anchored root — local checks pass by design</td><td>Content, still</td></tr>
           <tr><td><b>Truncate the tail</b></td><td style="color:var(--ok)">Yes</td><td>Fewer entries than the last published checkpoint</td><td>Lines after the last anchor</td></tr>
           <tr><td><b>Replace the data dir</b></td><td style="color:var(--ok)">Yes</td><td>Every root diverges; receipts on disk don't match</td><td>When the swap happened</td></tr>
-          <tr><td><b>Backdate timestamps</b></td><td style="color:var(--warn)">Partly</td><td>Timestamps are inside the digest, but an attacker who rewrites hashes can change them</td><td>True event time</td></tr>
+          <tr><td><b>Wipe the whole directory</b></td><td style="color:var(--ok)">Yes</td><td>An empty store reports NO DATA, not VERIFIED; surviving receipts escalate it to TAMPERED</td><td>When it happened</td></tr>
+          <tr><td><b>Backdate timestamps</b></td><td style="color:var(--warn)">Partly</td><td>Timestamps are inside the digest, so edits break the chain — but a writer can submit an old timestamp. Anchoring proves existence before a block, not that the claimed time is true</td><td>True event time</td></tr>
           <tr><td><b>Block outbound network</b></td><td style="color:var(--warn)">Partly</td><td>Liveness check raises STALE and alerts</td><td>Anything written after anchoring stopped</td></tr>
           <tr><td><b>Steal the anchor key</b></td><td style="color:var(--bad)">No, for new roots</td><td>Old roots stay frozen; a gap in sequence numbers is visible</td><td>Whether new roots are honest</td></tr>
         </tbody>
@@ -504,7 +509,7 @@ sent 50 entries -> 202 accepted 50; receipts 50, first seq 1</pre>
     <h2>Measured on a laptop, <em>not in a deck.</em></h2>
 
     <div class="numbers">
-      <div class="num"><b data-count="174">0</b><span>automated tests</span></div>
+      <div class="num"><b data-count="178">0</b><span>automated tests</span></div>
       <div class="num"><b><i data-count="12">0</i>/12</b><span>roots match on-chain</span></div>
       <div class="num"><b data-count="88700" data-suffix="">0</b><span>events / second</span></div>
       <div class="num"><b>$<i data-count="2.30" data-dec="2">0</i></b><span>per 100K events</span></div>
