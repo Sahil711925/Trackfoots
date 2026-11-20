@@ -81,7 +81,13 @@ Then, if they want more:
 > One per minute per type, so a polling dashboard can't turn one incident into a hundred pages. It's a
 > fire-and-forget POST with no retry — the honest trade for a 24-hour build, and the README says so."
 
-**12. "Did you build this?"**
+**12. "What do you actually hand CERT-In?"**
+> "`npm run incident` writes a one-page notification: incident id, detection timestamp, the 6-hour deadline,
+> which sequences are affected, the published roots, the contract address, and how the recipient verifies it
+> themselves. It's built from verifier output, so it can't overstate anything. And it has a section saying
+> what we cannot prove — the content of deleted lines, and who deleted them."
+
+**13. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

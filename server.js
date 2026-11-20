@@ -151,6 +151,14 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (req.method === 'GET' && (url.pathname === '/api/incident-report' || url.pathname === '/incident')) {
+    const { build } = require('./lib/incident-report');
+    const chain = { address: (() => { try { const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'deployments.json'), 'utf8')); const k = process.env.CHAIN || 'local'; return (d[k] || Object.values(d)[0] || {}).address; } catch { return null; } })(), network: process.env.CHAIN || 'local' };
+    const { html } = build(state().report, chain, store.readLedger(), process.env.ORG || 'Trackfoots');
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    return res.end(html);
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/alerts') {
     return json(res, 200, { alerts: alerts.recent(50), webhook: Boolean(process.env.ALERT_WEBHOOK) });
   }
