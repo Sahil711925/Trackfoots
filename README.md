@@ -5,6 +5,8 @@
 A log store whose integrity can be *proved* after a breach, even when the attacker has root on the server.
 Built for **The Big Hack 2.0**, Track 02 (Cybersecurity & Blockchain), problem **B3 — "Logs the attacker can't erase."**
 
+![Trackfoots demo](docs/screenshot.png)
+
 ---
 
 ## The problem

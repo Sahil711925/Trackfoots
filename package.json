@@ -2,8 +2,13 @@
   "name": "trackfoots",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Tamper-evident log integrity: hash-chained logs whose Merkle roots are anchored to a public ledger, so a root-level attacker cannot rewrite history.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
+    "start": "node server.js",
     "seed": "node scripts/seed.js",
     "anchor": "node scripts/anchor.js",
     "verify": "node cli.js verify",

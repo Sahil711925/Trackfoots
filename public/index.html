@@ -175,7 +175,7 @@ function paint(s){
   document.getElementById('stream-note').textContent = s.total + ' total';
 
   document.getElementById('anchors').innerHTML = s.ledger.map(b => `
-    <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t">${b.chain === 'LOCAL-SIMULATED' ? 'local' : b.chain}</span></div>`).join('');
+    <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t ${b.chain === 'LOCAL-SIMULATED' ? '' : 'yes'}">${b.chain === 'LOCAL-SIMULATED' ? 'local only' : 'on-chain'}</span></div>`).join('');
   const onChain = s.ledger.filter(b => b.chain !== 'LOCAL-SIMULATED').length;
   const chainInfo = s.chain || {};
   document.getElementById('anchor-note').textContent = `${s.ledger.length} roots · ${onChain} on-chain`;
