@@ -87,6 +87,7 @@
       </div>
     </div>
     <div id="pill" class="pill">checking…</div>
+    <a class="pill" href="/auditor" style="text-decoration:none;margin-left:8px">auditor view ↗</a>
   </header>
 
   <div id="banner" class="banner"></div>
@@ -135,6 +136,7 @@
       a root-level attacker inside that window could still delete them. Closing it needs per-write receipts
       (implemented auditor-side, shown above) or immediate anchoring at higher cost.</div>
     </details>
+    <div id="receiptnote" style="margin-top:8px;color:var(--muted)"></div>
   </div>
 </div>
 
@@ -192,6 +194,15 @@ function paint(s){
     warn.textContent = `CHAIN DEGRADED — anchoring is configured (${chainInfo.network}) but 0 of ${chainInfo.total} roots reached it. Roots are in the local ledger only. Check that the chain process is running.`;
   } else {
     warn.style.display = 'none';
+  }
+
+  const rc = r.receipts;
+  const rk = r.receiptKey;
+  const rn = document.getElementById('receiptnote');
+  if (rn) {
+    if (rc) {
+      rn.innerHTML = `Receipts: <b class="${rc.invalid ? 'no' : 'yes'}">${rc.valid}/${rc.total}</b> HMAC-SHA256 verified · key source: ${rk.keySource}${rk.persistent ? ' (held outside data/)' : ' (per-process, not persisted)'}`;
+    } else rn.textContent = '';
   }
 
   if (tampered && r.badBatches.length){

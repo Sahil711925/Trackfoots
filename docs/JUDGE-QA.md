@@ -33,12 +33,17 @@ Then, if they want more:
 > published it — that sequence number is write-once, the call reverts. So the history that exists is fixed. That's the
 > property, not ownership of the contract."
 
-**4. "What if he deletes the logs before they're anchored?"**
+**4. "So I still have to trust your server?"**
+> "No — that's the auditor view. It's a separate verifier that reads two things: the bundle you hand it, and the
+> root on the chain. It never opens our log files. You can run it yourself with `npm run auditor` on the bundle,
+> or open /auditor and paste one. Edit a single character in that bundle and the proof stops rebuilding the root."
+
+**5. "What if he deletes the logs before they're anchored?"**
 > "That's our real gap and it's the last line of the demo. Entries written since the last published batch are protected
 > by the hash chain only. The fix is per-write receipts — we already do them auditor-side, we just haven't made them
 > the primary path." *(Volunteering this scores; almost nobody does.)*
 
-**5. "What stops you serving me a different history than you served the auditor?"**
+**6. "What stops you serving me a different history than you served the auditor?"**
 > "That's what the checkpoint roots and consistency proofs are for. We publish the Merkle root of *every entry so
 > far* — not just the batch — and the chain fixes it at that sequence number. A consistency proof then shows that
 > today's checkpoint extends yesterday's. Two internally consistent but different histories can't both extend the
@@ -46,13 +51,13 @@ Then, if they want more:
 > Transparency algorithm — we follow it rather than hashing pairs ad hoc: 0x00-prefixed leaves, 0x01-prefixed
 > nodes, subtrees split at the largest power of two."
 
-**6. "Why is binary search valid for finding the bad batch?"**
+**7. "Why is binary search valid for finding the bad batch?"**
 > "Because damage is monotone when it reaches the last batch — one changed hash invalidates every later hash, so
 > 'is this batch bad' is false-then-true, which is exactly what binary search needs. We don't assume it: the auditor
 > tests whether the last batch is bad, and falls back to a linear scan when an attacker tampers with one early batch
 > and stops. The report records which method ran."
 
-**7. "Did you build this?"**
+**8. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

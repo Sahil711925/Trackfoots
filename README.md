@@ -98,6 +98,9 @@ starts the server and opens the browser.
 | `lib/bundle.js` | Printable auditor evidence bundle (single entry, A4, self-contained) |
 | `lib/liveness.js` | Detects anchoring that has silently stopped |
 | `lib/consistency.js` | Proves checkpoint N+1 extends checkpoint N (append-only across time) |
+| `lib/receipts.js` | HMAC-signed write receipts — the attacker can't mint one |
+| `lib/auditor.js` | Independent verifier: bundle + chain, no access to `data/` |
+| `public/auditor.html` | The auditor's own screen — never touches the operator's logs |
 | `lib/chain.js` | Contract compile, deploy, anchor, read-back |
 | `lib/seed.js` | Synthetic log generator (1,200 demo entries) |
 | `lib/env.js` | Config loader — `.env` always wins over inherited shell values |
@@ -123,7 +126,32 @@ node scripts/export-bundle.js 250 # -> exports/bundle-250.html, the auditor arti
 npm test                          # -> 61 passing
 npm run liveness                  # -> HEALTHY / STALE, detects anchoring that stopped
 npm run consistency               # -> APPEND-ONLY: 11/11 checkpoint pairs extend
+npm run bundle -- 250             # -> exports/bundle-250.html + .json (the exhibit)
+npm run auditor -- exports/bundle-250.json   # -> verifies from the chain alone
 ```
+
+### Verify without trusting us
+
+The auditor is a separate verifier. It reads **two things**: the bundle and the root published on-chain.
+
+```bash
+npm run bundle -- 250
+npm run auditor -- exports/bundle-250.json
+```
+
+```
+✔ entry digest
+✔ inclusion proof rebuilds the checkpoint root
+✔ checkpoint root matches the chain
+VERDICT: the bundle is genuine
+```
+
+Edit the bundle by one character and the same command fails — the digest and the proof both stop
+matching, while the chain root is unchanged. You can also open `/auditor` in the web UI and paste a
+bundle, or press **Tamper with it** to watch the verification break.
+
+Receipts are signed with HMAC-SHA256 using a key held **outside** `data/` (environment/KMS). An intruder
+with root can read every log file and still cannot forge a receipt for a line that was never written.
 
 Expected output of the middle step, which is the whole point:
 

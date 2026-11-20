@@ -18,6 +18,7 @@ const { anchorAll } = require('./scripts/anchor');
 const { buildProof } = require('./lib/proof');
 const { buildBundle } = require('./lib/bundle');
 const { checkChainOfCheckpoints } = require('./lib/consistency');
+const { verifyPayload } = require('./lib/auditor');
 
 const PORT = Number(process.env.PORT || 5173);
 const ROOT = __dirname;
@@ -91,6 +92,49 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/state') return json(res, 200, state());
+
+  if (req.method === 'GET' && url.pathname === '/auditor') {
+    const html = fs.readFileSync(path.join(ROOT, 'public', 'auditor.html'));
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    return res.end(html);
+  }
+
+  // The auditor verifies a bundle against the chain. It deliberately does not read data/.
+  if (req.method === 'GET' && url.pathname === '/api/auditor/latest') {
+    try {
+      const dir = path.join(ROOT, 'exports');
+      if (!fs.existsSync(dir)) return json(res, 404, { error: 'no exports directory yet' });
+      const files = fs
+        .readdirSync(dir)
+        .filter((f) => /^bundle-\d+\.json$/.test(f))
+        .sort((a, b) => fs.statSync(path.join(dir, b)).mtimeMs - fs.statSync(path.join(dir, a)).mtimeMs);
+      if (!files.length) return json(res, 404, { error: 'no bundle exported yet — run: npm run bundle -- 250' });
+      const payload = JSON.parse(fs.readFileSync(path.join(dir, files[0]), 'utf8'));
+      return json(res, 200, { file: files[0], payload });
+    } catch (err) {
+      return json(res, 500, { error: err.message });
+    }
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/auditor/verify') {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', async () => {
+      try {
+        const { payload } = JSON.parse(body || '{}');
+        let readChainRoot = null;
+        try {
+          const chain = require('./lib/chain');
+          if (chain.readDeployment()) readChainRoot = (seq) => chain.readRoot(seq);
+        } catch { /* chain optional */ }
+        const out = await verifyPayload(payload, { readChainRoot });
+        return json(res, 200, out);
+      } catch (err) {
+        return json(res, 400, { error: err.message });
+      }
+    });
+    return;
+  }
 
   if (req.method === 'GET' && (url.pathname === '/api/consistency' || url.pathname === '/api/append-only')) {
     try {

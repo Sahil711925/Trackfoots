@@ -20,6 +20,7 @@
     "verify:chain": "node scripts/verify-chain.js",
     "liveness": "node scripts/check-liveness.js",
     "consistency": "node scripts/check-consistency.js",
+    "auditor": "node scripts/auditor.js",
     "test": "node --test tests/*.test.js",
     "prove": "node scripts/prove.js",
     "bundle": "node scripts/export-bundle.js"

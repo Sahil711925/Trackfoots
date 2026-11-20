@@ -29,13 +29,20 @@ if (raw === undefined || !/^\d+$/.test(String(raw).trim())) usage(raw ? `not a s
 const seq = Number(String(raw).trim());
 if (!Number.isInteger(seq) || seq <= 0) usage(`not a sequence number: ${raw}`);
 
-const { buildBundle } = require('../lib/bundle');
+const { buildBundle, bundlePayload } = require('../lib/bundle');
 
 buildBundle(seq)
   .then(({ path: outPath }) => {
     const bytes = fs.statSync(outPath).size;
+
+    // Also emit the machine-checkable half, so a third party can verify without our HTML
+    // and without our server: node scripts/auditor.js exports/bundle-<seq>.json
+    const jsonPath = outPath.replace(/\.html$/, '.json');
+    fs.writeFileSync(jsonPath, JSON.stringify(bundlePayload(seq), null, 2));
+
     console.log(outPath);
-    console.error(`wrote ${bytes} bytes · entry #${seq} · ${path.basename(outPath)}`);
+    console.log(jsonPath);
+    console.error(`wrote ${bytes} bytes · entry #${seq} · ${path.basename(outPath)} + ${path.basename(jsonPath)}`);
     process.exit(0);
   })
   .catch((err) => {
