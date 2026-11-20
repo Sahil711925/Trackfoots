@@ -13,3 +13,6 @@ exports/
 
 # sample log files are fixtures, not noise
 !samples/*.log
+
+# shipper resume state is per-machine
+.shipper-state.json

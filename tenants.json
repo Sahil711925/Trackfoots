@@ -1,0 +1,20 @@
+{
+  "_about": "Tenant registry for Trackfoots multi-tenancy. One tenant = one `node server.js` process with its own PORT, WITNESS_DATA, INGEST_KEY and ORG. There are no shared rows, no shared chain sequence namespace, and no shared auditor store.",
+  "_shape": "{ \"tenants\": [ { \"name\": string, \"port\": int 1024-65535, \"org\": string, \"dataDir\": string relative to repo root, \"keyEnv\": string env var holding this tenant's ingest key } ] }",
+  "tenants": [
+    {
+      "name": "acme",
+      "port": 5174,
+      "org": "ACME Pvt Ltd",
+      "dataDir": "data/tenants/acme",
+      "keyEnv": "INGEST_KEY_ACME"
+    },
+    {
+      "name": "fintech",
+      "port": 5175,
+      "org": "Fintech Co",
+      "dataDir": "data/tenants/fintech",
+      "keyEnv": "INGEST_KEY_FINTECH"
+    }
+  ]
+}

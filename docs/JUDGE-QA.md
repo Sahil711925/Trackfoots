@@ -93,7 +93,18 @@ Then, if they want more:
 > themselves. It's built from verifier output, so it can't overstate anything. And it has a section saying
 > what we cannot prove — the content of deleted lines, and who deleted them."
 
-**13. "Did you build this?"**
+**13. "How would a company actually adopt this?"**
+> "Three ways, none needing application changes. A shipper that tails `/var/log/auth.log`, parses sshd, and pushes
+> through the API with resume offsets and rotation handling. Direct API calls if they'd rather instrument the app —
+> POST /api/log, get a signed receipt back. And a public status page so their auditor checks us without an account."
+
+**14. "Is it multi-tenant?"**
+> "Yes, isolated by process rather than by row: each tenant gets its own server, data directory, ingest key and
+> chain sequence namespace. I proved it rather than asserting it — two tenants, one entry each, cross-key writes
+> return 401, and neither can see the other's logs or roots. Sharing rows would have been cheaper and would have
+> put one company's evidence inside another's Merkle tree."
+
+**15. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

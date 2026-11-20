@@ -72,6 +72,15 @@ Explorer so the incident report is one double-click away.
 >
 > Press **`Tamper with it (demo)`** → **`Verify bundle`** → it refuses. Restore → verifies.
 
+**Search** — press `/`, type `ssh login failed`.
+> "1,200 lines and it's a real log browser — 146 matches, filter by actor, paginate. This is what an analyst actually uses at 3 a.m."
+
+**`/status`** — open in a new tab.
+> "Same system, no login, no dashboard. A customer or a regulator checks it themselves: root, batches, contract address. If our API were down it would say so — a status page that lies is worse than none."
+
+**Adoption, if they ask "but how would we use this?"**
+> "`npm run shipper -- --file /var/log/auth.log --follow`. It tails the file, parses sshd, pushes through the API, resumes from an offset, survives log rotation. No application changes. And `npm run tenants` runs one deployment per company — separate process, separate data, separate roots."
+
 ---
 
 ## If the demo breaks

@@ -50,6 +50,33 @@
   .anchor .b{color:var(--blue)}
   .anchor .t{color:var(--muted)}
 
+  /* --- log search / filter / pagination --- */
+  .logtools{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel2);display:flex;flex-direction:column;gap:8px}
+  .searchrow{display:flex;gap:8px;align-items:center}
+  .searchrow input{flex:1;min-width:0;padding:8px 11px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:12px/1.4 var(--mono)}
+  .searchrow input::placeholder{color:var(--muted)}
+  .searchrow input:focus{outline:none;border-color:var(--blue)}
+  button.mini{font-weight:600;font-size:11px;line-height:1;letter-spacing:.04em;padding:7px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-family:var(--mono)}
+  button.mini:hover{background:#1f2b3b;border-color:#2c3c50;color:var(--fg)}
+  button.mini:disabled{opacity:.4;cursor:default}
+  button.mini:disabled:hover{background:var(--panel2);border-color:var(--line);color:var(--muted)}
+  .filterrow{display:none;align-items:center;gap:8px;flex-wrap:wrap;font:11px var(--mono);color:var(--muted)}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:4px 4px 4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:11px var(--mono);max-width:100%}
+  .chip b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+  .chip .x{border:0;background:none;color:var(--muted);font:12px var(--mono);line-height:1;padding:2px 6px;border-radius:999px;cursor:pointer}
+  .chip .x:hover{background:rgba(239,68,68,.14);color:var(--red)}
+  tbody tr:hover td{background:rgba(59,130,246,.05)}
+  td.actorcol{padding:0}
+  td.actorcol button{display:block;width:100%;text-align:left;padding:7px 16px;border:0;border-radius:0;background:none;color:var(--fg);font:inherit;font-weight:400;cursor:pointer;transition:none}
+  td.actorcol button:hover{background:none;color:var(--blue);text-decoration:underline}
+  td.empty{font-family:inherit;color:var(--muted);white-space:normal;padding:26px 16px;line-height:1.9}
+  td.empty .mini{margin-left:10px}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 16px;border-top:1px solid var(--line);font:11.5px var(--mono);color:var(--muted);flex-wrap:wrap}
+  .pager .pagerbtns{display:flex;align-items:center;gap:6px}
+  .pager select{font:11.5px var(--mono);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+  .pager select:focus{outline:none;border-color:var(--blue)}
+  .pager .range b{color:var(--fg);font-weight:600}
+
   .controls{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 14px}
   button{font:inherit;font-weight:600;padding:11px 17px;border-radius:10px;border:1px solid var(--line);background:#18212e;color:var(--fg);cursor:pointer;transition:.15s}
   button:hover{background:#1f2b3b;border-color:#2c3c50}
@@ -103,7 +130,29 @@
   <div class="grid">
     <div class="card">
       <h3><span>Log stream</span><span id="stream-note"></span></h3>
+      <div class="logtools">
+        <div class="searchrow">
+          <input id="logsearch" type="text" placeholder="Search actor, action or metadata…  ( / )" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search log entries" />
+          <button id="searchclear" class="mini" type="button" style="display:none" title="Clear search (Esc)">✕ esc</button>
+        </div>
+        <div class="filterrow" id="filterrow">
+          <span class="chips" id="chips"></span>
+          <button id="clearfilters" class="mini" type="button" style="display:none">clear filters</button>
+        </div>
+      </div>
       <div class="scroll"><table id="logs"><thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th><th>Hash</th></tr></thead><tbody></tbody></table></div>
+      <div class="pager">
+        <span class="range" id="logrange">–</span>
+        <span class="pagerbtns">
+          <select id="pagesize" aria-label="Rows per page">
+            <option value="25">25 / page</option>
+            <option value="50" selected>50 / page</option>
+            <option value="100">100 / page</option>
+          </select>
+          <button id="prevpage" class="mini" type="button">‹ prev</button>
+          <button id="nextpage" class="mini" type="button">next ›</button>
+        </span>
+      </div>
     </div>
     <div class="card">
       <h3><span>Published roots</span><span id="anchor-note"></span></h3>
@@ -186,11 +235,6 @@ function paint(s){
   c.textContent = r.chainOk ? 'intact' : 'broken @ ' + r.firstBrokenEntry;
   c.className = 'v ' + (r.chainOk ? 'g' : 'r');
 
-  document.querySelector('#logs tbody').innerHTML = s.entries.map(e => `
-    <tr><td class="seq">${e.seq}</td><td>${new Date(e.ts).toLocaleTimeString('en-IN',{hour12:false})}</td>
-    <td>${esc(e.actor)}</td><td class="act">${esc(e.action)}</td><td class="seq">${e.hash.slice(0,10)}…</td></tr>`).join('');
-  document.getElementById('stream-note').textContent = s.total + ' total';
-
   document.getElementById('anchors').innerHTML = s.ledger.map(b => `
     <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t ${b.chain === 'LOCAL-SIMULATED' ? '' : 'yes'}">${b.chain === 'LOCAL-SIMULATED' ? 'local only' : 'on-chain'}</span></div>`).join('');
   const onChain = s.ledger.filter(b => b.chain !== 'LOCAL-SIMULATED').length;
@@ -234,13 +278,195 @@ function paint(s){
   }
 }
 
-async function load(){ paint(await (await fetch('/api/state')).json()); }
+async function load(){
+  let s = null;
+  try { s = await (await fetch('/api/state')).json(); } catch (err) { s = null; }
+  if (s) paint(s);
+  await refreshLog();
+}
+
+/* ------------------------------------------------------------------
+   Log stream: search, actor quick-filters, pagination.
+   Backed by GET /api/entries?q=&actor=&limit=&offset= — newest first.
+   All state lives in logState, so the 4s poll re-renders the same
+   query/page instead of resetting it.
+------------------------------------------------------------------ */
+const logState = { q: '', actor: '', limit: 50, offset: 0, total: 0 };
+let logToken = 0;          // drops out-of-order responses
+let lastLogHtml = '';      // avoids re-writing an unchanged tbody (keeps scroll)
+let searchTimer = null;
+
+const escAttr = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function logQuery(){
+  const p = [];
+  if (logState.q) p.push('q=' + encodeURIComponent(logState.q));
+  if (logState.actor) p.push('actor=' + encodeURIComponent(logState.actor));
+  p.push('limit=' + logState.limit, 'offset=' + logState.offset);
+  return p.join('&');
+}
+
+async function refreshLog(){
+  if (searchTimer) return;               // a keystroke debounce is about to fetch
+  const token = ++logToken;
+  const sent = logQuery();               // the query this response belongs to
+  let d;
+  try {
+    const res = await fetch('/api/entries?' + sent);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    d = await res.json();
+  } catch (err) {
+    if (token === logToken && !document.querySelector('#logs tbody tr')) {
+      document.querySelector('#logs tbody').innerHTML =
+        `<tr><td class="empty" colspan="5">Could not load entries — retrying. <span class="no">${esc(err.message)}</span></td></tr>`;
+    }
+    return;
+  }
+  // Drop the response if a newer request started, the filters moved on, or the
+  // user is mid-keystroke — never paint rows that don't match the current query.
+  if (token !== logToken || sent !== logQuery() || searchTimer) return;
+  logState.total = Number(d.total) || 0;
+
+  // The window drifts past the end when rows are added or deleted mid-poll.
+  if (!d.entries.length && logState.total > 0 && logState.offset > 0) {
+    logState.offset = Math.max(0, Math.floor((logState.total - 1) / logState.limit) * logState.limit);
+    return refreshLog();
+  }
+  renderLog(d);
+}
+
+function renderLog(d){
+  const tb = document.querySelector('#logs tbody');
+  const rows = d.entries || [];
+  let html;
+  if (!rows.length) {
+    const label = logState.q ? `“${esc(logState.q)}”`
+      : logState.actor ? `actor “${esc(logState.actor)}”`
+      : 'this page';
+    html = `<tr><td class="empty" colspan="5">No entries match ${label}
+      <button class="mini" type="button" onclick="clearAllFilters()">clear filters</button></td></tr>`;
+  } else {
+    html = rows.map(e => `
+      <tr><td class="seq">${e.seq}</td>
+      <td title="${escAttr(new Date(e.ts).toLocaleString('en-IN'))}">${new Date(e.ts).toLocaleTimeString('en-IN',{hour12:false})}</td>
+      <td class="actorcol"><button type="button" data-actor="${escAttr(e.actor)}" title="Filter to ${escAttr(e.actor)}">${esc(e.actor)}</button></td>
+      <td class="act">${esc(e.action)}</td>
+      <td class="seq">${String(e.hash).slice(0,10)}…</td></tr>`).join('');
+  }
+  if (html !== lastLogHtml) { tb.innerHTML = html; lastLogHtml = html; }
+
+  const n = rows.length;
+  document.getElementById('logrange').innerHTML =
+    `${fmt(n ? logState.offset + 1 : 0)}–${fmt(logState.offset + n)} of <b>${fmt(d.total)}</b>`;
+  document.getElementById('stream-note').textContent =
+    (logState.q || logState.actor) ? `${fmt(d.total)} matched` : `${fmt(d.total)} total`;
+  document.getElementById('prevpage').disabled = logState.offset <= 0;
+  document.getElementById('nextpage').disabled = logState.offset + logState.limit >= d.total;
+}
+
+function syncFilterUI(){
+  const active = !!(logState.q || logState.actor);
+  const row = document.getElementById('filterrow');
+  row.style.display = active ? 'flex' : 'none';
+  const chips = [];
+  if (logState.q) chips.push(`<span class="chip">text: <b>${esc(logState.q)}</b><button class="x" type="button" onclick="setQuery('')" title="Remove text filter">✕</button></span>`);
+  if (logState.actor) chips.push(`<span class="chip">actor: <b>${esc(logState.actor)}</b><button class="x" type="button" onclick="setActor('')" title="Remove actor filter">✕</button></span>`);
+  document.getElementById('chips').innerHTML = chips.join('');
+  document.getElementById('clearfilters').style.display = active ? '' : 'none';
+}
+
+function cancelSearchTimer(){
+  if (searchTimer) { clearTimeout(searchTimer); searchTimer = null; }
+}
+
+function setQuery(v){
+  cancelSearchTimer();
+  logState.q = String(v || '').trim();
+  logState.offset = 0;
+  document.getElementById('logsearch').value = v || '';
+  document.getElementById('searchclear').style.display = logState.q ? '' : 'none';
+  syncFilterUI();
+  refreshLog();
+}
+
+function setActor(name){
+  const n = String(name || '');
+  logState.actor = (logState.actor === n) ? '' : n;   // clicking the active actor clears it
+  logState.offset = 0;
+  syncFilterUI();
+  refreshLog();
+}
+
+function clearAllFilters(){
+  cancelSearchTimer();
+  logState.q = ''; logState.actor = ''; logState.offset = 0;
+  document.getElementById('logsearch').value = '';
+  document.getElementById('searchclear').style.display = 'none';
+  syncFilterUI();
+  refreshLog();
+}
+
+function goPage(delta){
+  const maxOffset = Math.floor(Math.max(logState.total - 1, 0) / logState.limit) * logState.limit;
+  logState.offset = Math.max(0, Math.min(logState.offset + delta * logState.limit, maxOffset));
+  refreshLog();
+}
+
+(function wireLog(){
+  const input = document.getElementById('logsearch');
+  input.addEventListener('input', () => {
+    if (searchTimer) clearTimeout(searchTimer);
+    const v = input.value;
+    document.getElementById('searchclear').style.display = v ? '' : 'none';
+    searchTimer = setTimeout(() => {
+      searchTimer = null;
+      logState.q = v.trim();
+      logState.offset = 0;
+      syncFilterUI();
+      refreshLog();
+    }, 250);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (input.value) { if (searchTimer) { clearTimeout(searchTimer); searchTimer = null; } setQuery(''); }
+      else clearAllFilters();
+      input.blur();
+    }
+  });
+  document.getElementById('searchclear').addEventListener('click', () => setQuery(''));
+  document.getElementById('clearfilters').addEventListener('click', () => clearAllFilters());
+  document.getElementById('prevpage').addEventListener('click', () => goPage(-1));
+  document.getElementById('nextpage').addEventListener('click', () => goPage(1));
+  document.getElementById('pagesize').addEventListener('change', (e) => {
+    logState.limit = Number(e.target.value) || 50;
+    logState.offset = 0;
+    refreshLog();
+  });
+
+  // Click an actor anywhere in the table to filter to it.
+  document.querySelector('#logs tbody').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-actor]');
+    if (b) setActor(b.getAttribute('data-actor'));
+  });
+
+  // '/' focuses the search box from anywhere; never hijack it while typing.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+  });
+})();
 
 async function attack(mode){
   lock(true);
   try {
     const res = await fetch('/api/attack', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({mode, batch:3})});
     paint(await res.json());
+    await refreshLog();
   } finally { lock(false); }
 }
 async function verifyNow(){
@@ -254,6 +480,8 @@ async function reset(){
     const data = await res.json();
     if (res.status === 409) { await load(); return; }
     paint(data);
+    logState.offset = 0;
+    await refreshLog();
   } finally { lock(false); }
 }
 
@@ -305,6 +533,7 @@ async function forgeReceipt(){
     const res = await fetch('/api/forge-receipt', {method:'POST'});
     const data = await res.json();
     paint(data);
+    await refreshLog();
     const rc = (data.report || {}).receipts;
     if (rc) {
       document.getElementById('proofout').innerHTML = `
@@ -341,7 +570,9 @@ async function emitLine(){
 
 function lock(on){
   busyLock = on;
-  document.querySelectorAll('button').forEach(b => {
+  // Only the action bar is locked; the log browser stays usable while a
+  // mutation is in flight (its own requests are token-guarded).
+  document.querySelectorAll('.controls button').forEach(b => {
     b.disabled = on;
     b.style.opacity = on ? .5 : 1;
   });

@@ -75,6 +75,10 @@ demonstrated it.</p>
   <li><b>Filing, not just detecting.</b> Detection produces a CERT-In 6-hour notification: incident ID, detection
       time, affected sequences, published roots, contract address, verification steps for the recipient — and an
       explicit section listing what the evidence cannot prove.</li>
+  <li><b>Adoption without code changes.</b> A shipper tails an existing <code>/var/log/auth.log</code>, parses it,
+      and pushes through the API with resume offsets and rotation handling. Tenants are isolated by process — own
+      data dir, own key, own sequence namespace — and a public <code>/status</code> page lets an auditor check the
+      log without an account.</li>
 </ul>
 
 <h2>Why the blockchain is load-bearing</h2>
@@ -116,9 +120,10 @@ we apply the same pattern one level down, from the certificate to the evidence b
   </div>
   <div>
     <h2>Implementation size</h2>
-    <p>~8,200 lines across 74 files, including 129 automated tests. Hash chain, RFC 6962 Merkle tree with inclusion,
-    consistency and incremental-checkpoint proofs, a Solidity contract, an authenticated ingest API, an anchoring
-    worker, an independent auditor, two attacker profiles, a CERT-In report generator and a web UI.</p>
+    <p>~12,300 lines across 88 files, including 174 automated tests. Hash chain, RFC 6962 Merkle tree with inclusion,
+    consistency and incremental-checkpoint proofs, a Solidity contract, an authenticated ingest API with a shipper,
+    multi-tenant process isolation, an anchoring worker, an independent auditor, a CERT-In report generator and a
+    searchable dashboard.</p>
   </div>
 </div>
 

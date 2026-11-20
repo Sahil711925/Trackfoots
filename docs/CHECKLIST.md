@@ -31,10 +31,14 @@ Status: **feature-complete for B3.** Everything marked ✅ was verified by runni
 - [x] Evidence bundle export (HTML exhibit + machine-checkable JSON)
 - [x] **Receipt-set commitment** — Merkle root over receipts; truncated set fails (`1199 present, 1200 committed`, exit 2)
 - [x] Liveness check — stale anchoring exits non-zero
+- [x] **Shipper** — `npm run shipper --file … --follow`: resume offsets, rotation, retries, batch receipts
+- [x] **Multi-tenant** — `npm run tenants up`: one process, data dir, key and root namespace per company
+- [x] **Search + pagination** — free text, actor filters, `1–50 of 146`, survives refresh
+- [x] **Public status page** — `/status`, no login, says UNREACHABLE rather than lying
 
 ## Engineering
 
-- [x] **129 tests, 129 pass, 0 fail** across 16 test files
+- [x] **174 tests, 174 pass, 0 fail** across 18 test files
 - [x] Audit is **O(n log n)** — incremental RFC 6962 accumulator; 50k entries in 2.2 s (was 107 s), roots byte-identical
 - [x] Benchmark: 88,700 entries/s ingest · $2.30 per 100K events at 100-event epochs
 - [x] Zero runtime dependencies beyond `ethers`/`solc` (hash chain and Merkle are ours)
@@ -52,7 +56,7 @@ Status: **feature-complete for B3.** Everything marked ✅ was verified by runni
 
 - [x] Pushed to `github.com/Sahil711925/Trackfoots`
 - [x] Sample log fixtures tracked (`.gitignore` exception for `samples/*.log`)
-- [x] 74 files, ~8,200 lines
+- [x] 88 files, ~12,300 lines
 
 ---
 

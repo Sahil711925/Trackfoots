@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="index,follow" />
+<title>TRACKFOOTS — public status</title>
+<style>
+  :root{
+    --bg:#0a0e14;--panel:#111823;--panel2:#0d141d;--line:#1e2a38;
+    --fg:#e6edf6;--muted:#7d8ea3;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--fg);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 20px 56px}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{font-size:15px;letter-spacing:.16em;font-weight:700}
+  .tag{font-size:12px;color:var(--muted);margin-top:3px}
+  nav{display:flex;gap:8px;flex-wrap:wrap}
+  nav a{color:var(--muted);font-size:12px;text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:999px}
+  nav a:hover{color:var(--fg);border-color:#2c3d52}
+  a{color:#8ab4ff}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+
+  /* 1. hero verdict */
+  .hero{border:1px solid var(--line);border-radius:16px;padding:22px 22px 18px;background:var(--panel);position:relative;overflow:hidden}
+  .hero:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--muted)}
+  .hero.v-green{border-color:rgba(34,197,94,.35);background:linear-gradient(180deg,rgba(34,197,94,.07),rgba(34,197,94,0) 70%),var(--panel)}
+  .hero.v-green:before{background:var(--green)}
+  .hero.v-red{border-color:rgba(239,68,68,.4);background:linear-gradient(180deg,rgba(239,68,68,.09),rgba(239,68,68,0) 70%),var(--panel)}
+  .hero.v-red:before{background:var(--red)}
+  .hero.v-grey:before{background:var(--muted)}
+  .verdictline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .dot{width:15px;height:15px;border-radius:50%;background:var(--muted);flex:none}
+  .v-green .dot{background:var(--green);box-shadow:0 0 0 5px rgba(34,197,94,.14)}
+  .v-red .dot{background:var(--red);box-shadow:0 0 0 5px rgba(239,68,68,.16)}
+  #verdict{font-size:34px;line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:700}
+  .v-green #verdict{color:#9ff0bd}
+  .v-red #verdict{color:#ffb4b4}
+  .v-grey #verdict{color:var(--muted)}
+  .heroSub{color:var(--muted);font-size:13.5px;margin-top:10px}
+  .heroSub b{color:var(--fg);font-weight:600}
+  .facts{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(30,42,56,.8)}
+  .fact{min-width:120px}
+  .fact .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+  .fact .v{font-family:var(--mono);font-size:13.5px;margin-top:2px;color:var(--fg)}
+  .err{margin-top:14px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);border-radius:10px;padding:11px 13px;font-size:12.5px;color:#ffc9c9;font-family:var(--mono);word-break:break-word}
+  .err:empty{display:none}
+  .warn{margin-top:12px;border-left:2px solid var(--amber);padding:2px 0 2px 12px;font-size:12.5px;color:#ffd79a}
+
+  /* sections */
+  section{margin-top:26px}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+  .kv{display:grid;grid-template-columns:170px 1fr;gap:0}
+  .kv>div{padding:11px 16px;border-bottom:1px solid rgba(30,42,56,.65);min-width:0}
+  .kv>div:nth-last-child(-n+2){border-bottom:none}
+  .kv .k{color:var(--muted);font-size:12px}
+  .kv .v{font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--fg)}
+  .v .big{font-size:12.5px;color:#cfe0f5}
+  .pill{display:inline-block;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:10.5px;letter-spacing:.03em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:8px;vertical-align:1px;white-space:nowrap}
+  .pill.on{color:#9ff0bd;border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.09)}
+  .pill.off{color:#ffd79a;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.09)}
+  .muted{color:var(--muted)}
+
+  /* table */
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid rgba(30,42,56,.65);white-space:nowrap}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;background:var(--panel2)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(30,42,56,.35)}
+  td.mono,.mono{font-family:var(--mono);font-size:11.5px}
+  td.num{font-family:var(--mono)}
+  .anchor-ok{color:var(--green)}
+  .anchor-local{color:var(--amber)}
+  .empty{padding:20px 16px;color:var(--muted);font-size:12.5px}
+
+  /* check box */
+  .checker{padding:16px}
+  .checker .hint{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+  .form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=number]{font:inherit;font-family:var(--mono);background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:170px}
+  input::placeholder{color:#55677c}
+  button{font:inherit;font-weight:600;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:#18212e;color:var(--fg);cursor:pointer}
+  button:hover{background:#1f2b3b}
+  #checkOut{margin-top:14px;font-size:12.5px;line-height:1.7}
+  #checkOut:empty{display:none}
+  #checkOut .res{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--panel2)}
+  #checkOut .res.bad{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.07)}
+  #checkOut .res.warnb{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.07)}
+
+  /* honesty notes */
+  .notes{color:var(--muted);font-size:12px;line-height:1.75;border-left:2px solid var(--line);padding-left:14px}
+  .notes b{color:#b9c9dc;font-weight:600}
+
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  footer .l{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px dotted #35485f}
+  footer a:hover{color:var(--fg)}
+  kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:#a9bbd0}
+  .spin{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);opacity:.5;animation:p 2s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:.25}50%{opacity:.9}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+  /* 7. mobile: single column */
+  @media (max-width:700px){
+    .wrap{padding:20px 14px 44px}
+    #verdict{font-size:27px}
+    .kv{grid-template-columns:1fr}
+    .kv>div{border-bottom:none;padding:8px 14px}
+    .kv .k{padding-bottom:0;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em}
+    .kv .v{padding-top:1px}
+    .kv>div:nth-child(odd){padding-bottom:2px}
+    .kv>div:nth-child(even){padding-top:0;padding-bottom:12px;border-bottom:1px solid rgba(30,42,56,.65)}
+    .facts{gap:16px 22px}
+    .fact{min-width:calc(50% - 22px)}
+    table thead{display:none}
+    table,tbody,tr,td{display:block;width:100%}
+    tbody tr{border-bottom:1px solid rgba(30,42,56,.8);padding:6px 0}
+    tbody tr:last-child{border-bottom:none}
+    td{border:none;padding:4px 14px;display:flex;justify-content:space-between;gap:14px;text-align:right;white-space:normal}
+    td:before{content:attr(data-label);color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;text-align:left;flex:none}
+    footer{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand">TRACKFOOTS · PUBLIC STATUS</div>
+      <div class="tag">integrity of the audit log — no login, no operator UI required</div>
+    </div>
+    <nav>
+      <a href="/auditor">Auditor ↗</a>
+      <a href="/incident">Incident report ↗</a>
+    </nav>
+  </header>
+
+  <!-- 1. verdict -->
+  <div class="hero v-grey" id="hero" role="status" aria-live="polite">
+    <div class="verdictline">
+      <span class="dot" aria-hidden="true"></span>
+      <h1 id="verdict">CHECKING…</h1>
+      <h2 style="margin:0;letter-spacing:.04em" class="muted" id="verdictAside"></h2>
+    </div>
+    <div class="heroSub" id="heroSub">Reading public endpoints…</div>
+    <div class="err" id="err"></div>
+    <div class="warn" id="warn" hidden></div>
+    <div class="facts">
+      <div class="fact"><div class="k">Entries on disk</div><div class="v" id="fEntries">—</div></div>
+      <div class="fact"><div class="k">Batches published</div><div class="v" id="fBatches">—</div></div>
+      <div class="fact"><div class="k">Hash chain</div><div class="v" id="fChain">—</div></div>
+      <div class="fact"><div class="k">Append-only proofs</div><div class="v" id="fConsistency">—</div></div>
+    </div>
+  </div>
+
+  <!-- 2. latest root -->
+  <section>
+    <h2>Latest published root</h2>
+    <div class="panel">
+      <div class="kv" id="latest">
+        <div class="k">Merkle root</div><div class="v" id="lRoot">—</div>
+        <div class="k">Checkpoint root</div><div class="v" id="lCheckpoint">—</div>
+        <div class="k">Batch</div><div class="v" id="lBatch">—</div>
+        <div class="k">Contract</div><div class="v" id="lContract">—</div>
+        <div class="k">Network</div><div class="v" id="lNetwork">—</div>
+        <div class="k">Anchor tx</div><div class="v" id="lTx">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. batches -->
+  <section>
+    <h2>Published batches <span class="muted" id="batchCount" style="text-transform:none;letter-spacing:0"></span></h2>
+    <div class="panel">
+      <div class="tblwrap">
+        <table id="batchTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Sequence</th><th>Root (prefix)</th><th>Anchor</th><th>Published (UTC)</th>
+            </tr>
+          </thead>
+          <tbody id="batchBody">
+            <tr><td colspan="5" class="empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. check an entry -->
+  <section>
+    <h2>Check an entry</h2>
+    <div class="panel checker">
+      <p class="hint">
+        Enter a sequence number to see which published batch covers it. This page reports coverage
+        against the published roots only — it does not reveal log contents and does not produce proofs.
+      </p>
+      <form class="form" id="checkForm" autocomplete="off">
+        <label for="seqInput" class="muted" style="font-size:12px">Sequence</label>
+        <input id="seqInput" type="number" min="1" step="1" placeholder="e.g. 1150" inputmode="numeric" />
+        <button type="submit">Check</button>
+      </form>
+      <div id="checkOut" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- honesty -->
+  <section>
+    <h2>What this page does and does not prove</h2>
+    <div class="notes">
+      <div><b>Proves:</b> the log on the operator's disk still hashes to the roots that were published,
+        one batch at a time, and that each new checkpoint root extends the previous one (append-only).</div>
+      <div><b>Does not prove:</b> that every event was logged in the first place. A log can be
+        complete and tamper-evident, or incomplete but tamper-evident — only the first is verifiable here.</div>
+      <div><b>Don't trust this page:</b> the roots below are anchored on a public chain. Read them from the
+        contract yourself, or verify a signed bundle on the <a href="/auditor">auditor page</a>.</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="l">
+      <span>Refreshed <span id="refreshed">—</span></span>
+      <span><span class="spin" aria-hidden="true"></span> auto-refresh every 10s</span>
+      <span id="nextIn" class="muted"></span>
+    </div>
+    <div class="l">
+      <a href="/auditor">Auditor</a>
+      <a href="/incident">Incident report</a>
+      <a href="/">Operator dashboard</a>
+      <span class="muted">source: /api/state</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var state = null;
+  var lastOk = 0;
+  var contractCache = null;
+  var busy = false;
+  var refreshMs = 10000;
+  var nextAt = 0;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function num(n) {
+    if (n === null || n === undefined || n === '' || isNaN(n)) return '—';
+    return Number(n).toLocaleString('en-US');
+  }
+
+  function timeUTC(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    return d.toISOString().replace('T', ' ').replace(/\.\d+Z$/, 'Z');
+  }
+
+  function shortHash(h) {
+    if (!h) return '—';
+    return String(h).slice(0, 16) + '…';
+  }
+
+  function setText(el, t) {
+    if (el) el.textContent = t === null || t === undefined || t === '' ? '—' : String(t);
+  }
+
+  // Networks we can link to honestly. Anything else: label it, don't invent a URL.
+  var EXPLORERS = {
+    amoy: 'https://amoy.polygonscan.com',
+    polygon: 'https://polygonscan.com',
+    mainnet: 'https://polygonscan.com'
+  };
+
+  function isLocal(net) {
+    var n = String(net || '').toLowerCase();
+    return n === 'local' || n === 'localhost' || n === 'ganache' || n === 'hardhat' || n === 'anvil';
+  }
+
+  function explorerFor(net) {
+    var n = String(net || '').toLowerCase();
+    if (!n || isLocal(n)) return null;
+    return EXPLORERS[n] || null;
+  }
+
+  function anchorCell(b) {
+    var c = String(b.chain || '').toUpperCase();
+    if (!c || c === 'LOCAL-SIMULATED' || c === 'LOCAL') return { cls: 'anchor-local', label: 'local' };
+    return { cls: 'anchor-ok', label: c.toLowerCase() };
+  }
+
+  /* ---------- rendering ---------- */
+
+  function renderUnreachable(msg) {
+    var hero = $('hero');
+    hero.className = 'hero v-red';
+    setText($('verdict'), 'UNREACHABLE');
+    $('verdictAside').textContent = '';
+    var sub = $('heroSub');
+    sub.innerHTML = '';
+    sub.appendChild(document.createTextNode('The status API did not answer. This is not a green state — integrity is unknown.'));
+
+    var err = $('err');
+    err.textContent = msg || 'request failed';
+    $('warn').hidden = true;
+
+    // Clear anything that could be mistaken for a live claim.
+    setText($('fEntries'), '—');
+    setText($('fBatches'), '—');
+    setText($('fChain'), '—');
+    setText($('fConsistency'), '—');
+    setText($('lRoot'), 'unavailable');
+    setText($('lCheckpoint'), 'unavailable');
+    setText($('lBatch'), 'unavailable');
+    setText($('lContract'), 'unavailable');
+    setText($('lNetwork'), 'unavailable');
+    setText($('lTx'), 'unavailable');
+    setText($('batchCount'), '');
+    $('batchBody').innerHTML = '<tr><td colspan="5" class="empty">Batch list unavailable — the API could not be reached.</td></tr>';
+    setText($('refreshed'), timeUTC(new Date().toISOString()) + ' — failed');
+  }
+
+  function renderVerdict(st) {
+    var report = st.report || {};
+    var verdict = String(report.verdict || '').toUpperCase();
+    var hero = $('hero');
+
+    if (verdict === 'VERIFIED') {
+      hero.className = 'hero v-green';
+      setText($('verdict'), 'VERIFIED');
+      setText($('verdictAside'), 'no tampering detected');
+    } else {
+      hero.className = 'hero v-red';
+      setText($('verdict'), 'TAMPERED');
+      setText($('verdictAside'), verdict ? '(' + verdict + ')' : '(no verdict returned)');
+    }
+
+    var onDisk = report.entriesOnDisk != null ? report.entriesOnDisk : st.total;
+    var expected = report.entriesExpected != null ? report.entriesExpected : null;
+    var batches = report.batchesPublished != null
+      ? report.batchesPublished
+      : (st.chain && st.chain.total != null ? st.chain.total : (st.ledger || []).length);
+
+    var sub = $('heroSub');
+    sub.innerHTML = '';
+    var strong = document.createElement('b');
+    strong.textContent = num(onDisk) + ' entries';
+    sub.appendChild(strong);
+    sub.appendChild(document.createTextNode(' covering '));
+    var b2 = document.createElement('b');
+    b2.textContent = num(batches) + ' published batches';
+    sub.appendChild(b2);
+    if (expected != null) {
+      sub.appendChild(document.createTextNode(' · ' + num(expected) + ' expected from the ledger'));
+    }
+    if (report.checkedAt) {
+      sub.appendChild(document.createTextNode(' · verified at ' + timeUTC(report.checkedAt)));
+    }
+
+    $('err').textContent = '';
+
+    // Secondary signals. These never upgrade the verdict — they can only add a caveat.
+    var caveats = [];
+    if (report.chainOk === false) caveats.push('the local hash chain is broken' + (report.firstBrokenEntry ? ' at entry ' + report.firstBrokenEntry : ''));
+    if (report.badBatches && report.badBatches.length) caveats.push(num(report.badBatches.length) + ' batch(es) no longer match their published root');
+    if (report.corruptLines) caveats.push(num(report.corruptLines) + ' unreadable log line(s)');
+    if (report.receipts && report.receipts.invalid) caveats.push(num(report.receipts.invalid) + ' invalid receipt(s)');
+    if (st.consistency && st.consistency.ok === false) caveats.push('append-only check failed');
+    if (st.chain && st.chain.degraded) caveats.push('on-chain anchoring is configured but no batch is anchored');
+    var warn = $('warn');
+    if (caveats.length) {
+      warn.hidden = false;
+      setText(warn, 'Caveats: ' + caveats.join(' · '));
+    } else {
+      warn.hidden = true;
+      warn.textContent = '';
+    }
+
+    setText($('fEntries'), num(onDisk));
+    setText($('fBatches'), num(batches));
+    setText($('fChain'), report.chainOk === false ? 'BROKEN' : (report.chainOk === true ? 'intact' : '—'));
+    $('fChain').style.color = report.chainOk === false ? 'var(--red)' : '';
+
+    var cons = st.consistency || {};
+    setText($('fConsistency'),
+      cons.totalPairs ? (cons.ok ? cons.verifiedPairs + '/' + cons.totalPairs + ' ok' : cons.verifiedPairs + '/' + cons.totalPairs + ' failed')
+                      : 'no checkpoints yet');
+    $('fConsistency').style.color = cons.ok === false ? 'var(--red)' : '';
+  }
+
+  function renderLatest(st) {
+    var ledger = st.ledger || [];
+    var latest = ledger.length ? ledger[0] : null;
+    var net = (st.chain && st.chain.network) || (latest && latest.chain) || null;
+
+    if (!latest) {
+      setText($('lRoot'), 'no batches published yet');
+      setText($('lCheckpoint'), '—');
+      setText($('lBatch'), '—');
+      setText($('lTx'), '—');
+    } else {
+      setText($('lRoot'), latest.root || '—');
+      setText($('lCheckpoint'), latest.checkpointRoot || latest.root || '—');
+      setText($('lBatch'), '#' + latest.batch + ' · seq ' + num(latest.fromSeq) + '–' + num(latest.toSeq) + ' · ' + num(latest.count) + ' entries');
+      var txEl = $('lTx');
+      txEl.innerHTML = '';
+      if (latest.txHash) {
+        txEl.appendChild(document.createTextNode(latest.txHash));
+        var base = explorerFor(net) || (latest.explorer ? String(latest.explorer).split('/tx/')[0] : null);
+        if (base && /^0x[0-9a-fA-F]{64}$/.test(latest.txHash)) {
+          txEl.appendChild(document.createTextNode(' '));
+          var a = document.createElement('a');
+          a.href = base + '/tx/' + latest.txHash;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = 'view ↗';
+          txEl.appendChild(a);
+        }
+      } else {
+        txEl.textContent = '—';
+      }
+    }
+
+    // network
+    var netEl = $('lNetwork');
+    netEl.innerHTML = '';
+    if (!net) {
+      netEl.textContent = 'not reported by the API';
+    } else if (isLocal(net)) {
+      netEl.textContent = 'local EVM (demo)';
+      var p = document.createElement('span');
+      p.className = 'pill off';
+      p.textContent = 'no public explorer';
+      netEl.appendChild(p);
+    } else {
+      netEl.textContent = String(net);
+      var ok = explorerFor(net);
+      if (ok) {
+        var p2 = document.createElement('span');
+        p2.className = 'pill on';
+        p2.textContent = 'public chain';
+        netEl.appendChild(p2);
+      }
+    }
+
+    renderContract(st, net);
+  }
+
+  function renderContract(st, net) {
+    var el = $('lContract');
+    el.innerHTML = '';
+
+    var addr = (st.chain && st.chain.address) || null;
+
+    if (!addr && contractCache) addr = contractCache;
+    if (!addr) {
+      el.textContent = 'resolving…';
+      resolveContract().then(function (a) {
+        if (a) { contractCache = a; renderContract(state || {}, net); }
+        else if (el.textContent === 'resolving…') el.textContent = 'not published by this deployment';
+      });
+      return;
+    }
+
+    el.appendChild(document.createTextNode(addr));
+    var base = explorerFor(net);
+    if (!base && !isLocal(net)) {
+      // non-local network we have no mapping for: still offer the address, no fake link
+    }
+    if (base) {
+      el.appendChild(document.createTextNode(' '));
+      var a = document.createElement('a');
+      a.href = base + '/address/' + addr;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'explorer ↗';
+      el.appendChild(a);
+    } else {
+      var p = document.createElement('span');
+      p.className = 'pill off';
+      p.textContent = 'no public explorer';
+      el.appendChild(p);
+    }
+  }
+
+  /**
+   * /api/state.chain has no address field on this build; the contract address is only published
+   * through the existing public incident report. Read it, don't invent an endpoint.
+   */
+  function resolveContract() {
+    if (contractCache) return Promise.resolve(contractCache);
+    return fetch('/api/incident-report', { cache: 'no-store', headers: { accept: 'text/html' } })
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (html) {
+        var m = String(html).match(/0x[0-9a-fA-F]{40}/);
+        return m ? m[0] : null;
+      })
+      .catch(function () { return null; });
+  }
+
+  function renderBatches(st) {
+    var body = $('batchBody');
+    var ledger = st.ledger || [];
+    body.innerHTML = '';
+
+    if (!ledger.length) {
+      body.innerHTML = '<tr><td colspan="5" class="empty">No batches published yet — entries exist in the log but nothing has been anchored.</td></tr>';
+      setText($('batchCount'), '');
+      return;
+    }
+
+    setText($('batchCount'), '(' + num(ledger.length) + ')');
+    var net = (st.chain && st.chain.network) || null;
+
+    ledger.forEach(function (b) {
+      var tr = document.createElement('tr');
+
+      var td1 = document.createElement('td');
+      td1.className = 'num';
+      td1.setAttribute('data-label', 'Batch');
+      td1.textContent = String(b.batch);
+      tr.appendChild(td1);
+
+      var td2 = document.createElement('td');
+      td2.className = 'num';
+      td2.setAttribute('data-label', 'Sequence');
+      td2.textContent = num(b.fromSeq) + '–' + num(b.toSeq);
+      tr.appendChild(td2);
+
+      var td3 = document.createElement('td');
+      td3.className = 'mono';
+      td3.setAttribute('data-label', 'Root');
+      td3.textContent = shortHash(b.root);
+      td3.title = b.root || '';
+      tr.appendChild(td3);
+
+      var td4 = document.createElement('td');
+      td4.setAttribute('data-label', 'Anchor');
+      var a4 = anchorCell(b);
+      var sp = document.createElement('span');
+      sp.className = a4.cls;
+      sp.textContent = a4.label;
+      td4.appendChild(sp);
+      var base = explorerFor(net) || (b.explorer ? String(b.explorer).split('/tx/')[0] : null);
+      if (base && b.txHash && /^0x[0-9a-fA-F]{64}$/.test(b.txHash)) {
+        td4.appendChild(document.createTextNode(' '));
+        var a = document.createElement('a');
+        a.href = base + '/tx/' + b.txHash;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = 'tx ↗';
+        td4.appendChild(a);
+      }
+      tr.appendChild(td4);
+
+      var td5 = document.createElement('td');
+      td5.className = 'mono';
+      td5.setAttribute('data-label', 'Published');
+      td5.textContent = timeUTC(b.ts);
+      tr.appendChild(td5);
+
+      body.appendChild(tr);
+    });
+  }
+
+  /* ---------- check an entry ---------- */
+
+  function checkSeq(raw) {
+    var out = $('checkOut');
+    out.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'res';
+
+    var seq = Number(raw);
+    if (!raw || isNaN(seq) || seq <= 0 || Math.floor(seq) !== seq) {
+      box.className = 'res bad';
+      box.textContent = 'Enter a positive whole sequence number.';
+      out.appendChild(box);
+      return;
+    }
+
+    if (!state) {
+      box.className = 'res bad';
+      box.textContent = 'The status API is unreachable — coverage cannot be checked right now.';
+      out.appendChild(box);
+      return;
+    }
+
+    var ledger = state.ledger || [];
+    if (!ledger.length) {
+      box.className = 'res warnb';
+      box.textContent = 'No batches are published yet, so entry ' + num(seq) + ' is not covered by any root.';
+      out.appendChild(box);
+      return;
+    }
+
+    var maxTo = 0;
+    var hit = null;
+    ledger.forEach(function (b) {
+      if (b.toSeq > maxTo) maxTo = b.toSeq;
+      if (b.fromSeq <= seq && seq <= b.toSeq) hit = (hit && hit.batch > b.batch) ? hit : b;
+    });
+
+    if (seq > maxTo) {
+      box.className = 'res warnb';
+      box.textContent = 'Entry ' + num(seq) + ' is newer than the last published root (covers up to ' +
+        num(maxTo) + '). It sits in the unanchored tail, so nothing on-chain commits to it yet.';
+      out.appendChild(box);
+      return;
+    }
+
+    if (hit) {
+      var line1 = document.createElement('div');
+      var strong = document.createElement('b');
+      strong.textContent = 'Entry ' + num(seq) + ' is covered by batch #' + hit.batch;
+      line1.appendChild(strong);
+      line1.appendChild(document.createTextNode(' (seq ' + num(hit.fromSeq) + '–' + num(hit.toSeq) + ').'));
+      box.appendChild(line1);
+
+      var line2 = document.createElement('div');
+      line2.className = 'muted mono';
+      line2.style.marginTop = '4px';
+      line2.textContent = 'batch root ' + shortHash(hit.root) + ' · published ' + timeUTC(hit.ts) + ' · anchor ' + anchorCell(hit).label;
+      box.appendChild(line2);
+
+      var line3 = document.createElement('div');
+      line3.style.marginTop = '8px';
+      line3.appendChild(document.createTextNode('This page confirms coverage only. For an inclusion proof and a signed bundle, open the '));
+      var a = document.createElement('a');
+      a.href = '/auditor';
+      a.textContent = 'auditor page';
+      line3.appendChild(a);
+      line3.appendChild(document.createTextNode('.'));
+      box.appendChild(line3);
+    } else {
+      box.className = 'res warnb';
+      box.textContent = 'Entry ' + num(seq) + ' is below the first published batch range (' +
+        num(ledger[ledger.length - 1].fromSeq) + ') — it is not covered by any published root.';
+    }
+
+    out.appendChild(box);
+  }
+
+  /* ---------- fetch loop ---------- */
+
+  function refresh() {
+    if (busy) return;
+    busy = true;
+    var started = Date.now();
+
+    fetch('/api/state', { cache: 'no-store', headers: { accept: 'application/json' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText + ' from /api/state');
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || typeof data !== 'object' || !data.report) {
+          throw new Error('/api/state returned an unexpected shape (no report object)');
+        }
+        state = data;
+        lastOk = Date.now();
+        renderVerdict(data);
+        renderLatest(data);
+        renderBatches(data);
+      })
+      .catch(function (e) {
+        state = null;
+        var msg = (e && e.message) ? e.message : String(e);
+        if (e && e.name === 'TypeError') msg = 'network error: ' + msg;
+        renderUnreachable(msg + ' — fetched at ' + new Date().toISOString());
+      })
+      .then(function () {
+        busy = false;
+        setText($('refreshed'), new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, 'Z'));
+        nextAt = Date.now() + refreshMs;
+        void started;
+      });
+  }
+
+  function tick() {
+    var el = $('nextIn');
+    if (!el) return;
+    if (document.hidden) { el.textContent = 'paused (tab hidden)'; return; }
+    var left = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000));
+    el.textContent = 'next in ' + left + 's';
+    if (Date.now() >= nextAt) refresh();
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refresh();
+  });
+
+  $('checkForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    checkSeq($('seqInput').value.trim());
+  });
+  $('seqInput').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); checkSeq($('seqInput').value.trim()); }
+  });
+
+  var timer = setInterval(tick, 1000);
+  window.addEventListener('pagehide', function () { clearInterval(timer); });
+
+  refresh();
+  nextAt = Date.now() + refreshMs;
+})();
+</script>
+</body>
+</html>

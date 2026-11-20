@@ -257,6 +257,69 @@ can be shown on screen. It is restricted to localhost; the authenticated endpoin
 
 ---
 
+## Adopting it
+
+Three ways in, none of which require changing an application.
+
+**1 · Shipper** — a server that already writes logs keeps writing them; the shipper tails the file and
+pushes it through the API:
+
+```bash
+npm run shipper -- --file /var/log/auth.log --url http://localhost:5173 --key $INGEST_KEY --follow
+```
+
+```
+  format    sshd (auto-detected)
+  offset    0 (fresh start)
+  endpoint  http://localhost:5173/api/log
+  batch     50 per POST, follow on
+sent 50 entries -> 202 accepted 50; receipts 50, first seq 1
+```
+
+It resumes from a stored byte offset, restarts from zero on log rotation, retries with backoff, and only
+commits the offset after the API accepted the batch — a failed POST is re-sent, never skipped.
+
+**2 · Multi-tenant** — one deployment, several companies, isolated by process rather than by row:
+
+```bash
+npm run tenants -- up        # acme :5174, fintech :5175, own data dir, own key, own roots
+npm run tenants -- status    # entries/batches per tenant
+npm run tenants -- down
+```
+
+```
+  tenant   port  state  entries  batches  unanchored
+  acme     5174  up     121      2
+  fintech  5175  up     121      2
+    distinct data dirs: yes
+```
+
+Separate processes, separate `data/` trees, separate ledgers and separate ingest keys — one tenant's
+compromise cannot touch another's evidence. A shared-rows design would have been cheaper and weaker.
+
+**3 · Public status page** — `/status`, no login, no operator UI:
+
+> `VERIFIED · 1,200 entries covering 12 published batches · hash chain intact · 11/11 append-only proofs`
+
+with the latest root, every published batch, the contract address, and an entry-coverage lookup. If the API
+is down it says **UNREACHABLE** — a status page that lies about reachability is worse than none.
+
+---
+
+## Searching the log
+
+The dashboard is a working log browser, not a screenshot: free-text search across actor, action and
+metadata, click any actor to filter, and pagination over all 1,200 lines.
+
+```
+search "ssh login failed"   →  1–50 of 146
++ actor deploy              →  1–9 of 9
+```
+
+`/` focuses the search box, `Esc` clears it, and a refresh never wipes your filter or page.
+
+---
+
 ## Real logs, not invented ones
 
 The demo seeds synthetic entries so the numbers are reproducible, but the importer takes actual logs:
