@@ -120,6 +120,7 @@
     <input id="seq" type="number" placeholder="entry #" value="250" />
     <button class="g" onclick="proveEntry()">Prove entry</button>
     <button onclick="bundleEntry()">Evidence bundle</button>
+    <button class="r" onclick="forgeReceipt()">Forge a receipt</button>
   </div>
 
   <div id="proofout"></div>
@@ -284,6 +285,24 @@ async function bundleEntry(){
            <div class="row"><span class="k">print</span><span>Ctrl+P in the opened page → A4 PDF</span></div>
          </div>`
       : `<div class="proofcard"><h4>Evidence bundle</h4><div class="no">${esc(d.error || 'failed')}</div></div>`;
+  } finally { lock(false); }
+}
+
+async function forgeReceipt(){
+  lock(true);
+  try {
+    const res = await fetch('/api/forge-receipt', {method:'POST'});
+    const data = await res.json();
+    paint(data);
+    const rc = (data.report || {}).receipts;
+    if (rc) {
+      document.getElementById('proofout').innerHTML = `
+        <div class="proofcard"><h4>Forged receipt attempt</h4>
+          <div class="row"><span class="k">receipts verified</span><span class="${rc.invalid ? 'no' : 'yes'}">${rc.valid}/${rc.total} valid · ${rc.invalid} rejected</span></div>
+          <div class="row"><span class="k">what the attacker did</span><span>wrote a receipt for content that never existed, signed with his own key</span></div>
+          <div class="row"><span class="k">why it failed</span><span>the HMAC key is not on this machine</span></div>
+        </div>`;
+    }
   } finally { lock(false); }
 }
 

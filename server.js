@@ -136,6 +136,29 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && url.pathname === '/api/forge-receipt') {
+    return withLock(res, () => {
+      try {
+        const receiptsLib = require('./lib/receipts');
+        const { sha256 } = require('./lib/merkle');
+        const lines = store.readLogs().filter((r) => r.ok);
+        if (!lines.length) return json(res, 400, { error: 'no entries to forge a receipt for' });
+        const victim = lines[Math.floor(Math.random() * lines.length)].entry;
+
+        // A receipt for content that does not exist, signed with a key the attacker chose.
+        const forged = receiptsLib.makeForged({
+          seq: victim.seq + 100000,
+          chash: sha256('content-the-attacker-invented'),
+          ts: new Date().toISOString(),
+        });
+        fs.appendFileSync(store.RECEIPTS, JSON.stringify(forged) + '\n');
+        return json(res, 200, state());
+      } catch (err) {
+        return json(res, 500, { error: err.message });
+      }
+    });
+  }
+
   if (req.method === 'GET' && (url.pathname === '/api/consistency' || url.pathname === '/api/append-only')) {
     try {
       return json(res, 200, checkChainOfCheckpoints());
