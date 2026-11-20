@@ -76,7 +76,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
     const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'));
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    // no-store: otherwise the browser silently serves a cached copy and edits never appear
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store, must-revalidate' });
     return res.end(html);
   }
 

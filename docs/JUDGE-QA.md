@@ -19,11 +19,14 @@ Then, if they want more:
 > file is internally perfect — we built that attacker and it passes every local check. What he cannot do is change a
 > fingerprint that was published before he got in. That's the only property a compromised server can't fake."
 
-**2. "Isn't this just Certificate Transparency?"**
-> "The primitive is — Trillian and Sigstore Rekor do Merkle logging, we're not claiming a new data structure. What's
-> missing in India is the compliance artifact: CERT-In requires 6-hour reporting and 180-day retention, and assumes
-> the logs are intact. CERT-In itself put audit-certificate verification on a blockchain this year. We applied the
-> same pattern to the evidence underneath the certificate."
+**2. "Isn't this just Certificate Transparency? / Isn't this already solved?"**
+> "The primitive is — Certificate Transparency has run Merkle logs at internet scale for a decade, immudb ships it as
+> a database, and there's a Sept 2026 paper doing exactly this for AI agents. What changed is the market: AWS retired
+> QLDB in July 2025 and pointed customers at Aurora PostgreSQL, which has no tamper evidence at all. And in India
+> nothing connects this to CERT-In's 180-day duty — CERT-In's own blockchain covers audit certificates, not the
+> evidence behind them. We're not inventing Merkle logs; we're building the incident-evidence artifact for that
+> regulation, with the trust root outside the operator. The closest commercial product, Sigilbase, signs its
+> checkpoints with a key it holds — an auditor still trusts the vendor. Ours anchors where the operator can't reach."
 
 **3. "You control the contract. Can't you redeploy it and rewrite history?"**
 > "I can deploy a new contract, and it starts empty. What I cannot do is change a root inside a contract that already

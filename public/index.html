@@ -83,6 +83,7 @@
       <div>
         <h1>TRACKFOOTS</h1>
         <div class="tag">Tamper-evident logs — the proof survives the attacker</div>
+        <div class="tag" id="lastcheck" style="opacity:.55"></div>
       </div>
     </div>
     <div id="pill" class="pill">checking…</div>
@@ -142,6 +143,8 @@ const fmt = (n) => n?.toLocaleString?.('en-IN') ?? '–';
 const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
 function paint(s){
+  const stamp = document.getElementById('lastcheck');
+  if (stamp) stamp.textContent = 'live · updated ' + new Date().toLocaleTimeString('en-IN', { hour12: false });
   const r = s.report;
   const tampered = r.verdict !== 'VERIFIED';
 
@@ -271,11 +274,19 @@ async function bundleEntry(){
 }
 
 function lock(on){
+  busyLock = on;
   document.querySelectorAll('button').forEach(b => {
     b.disabled = on;
     b.style.opacity = on ? .5 : 1;
   });
 }
+
+// Live refresh: the page used to sit on stale data until you pressed something.
+// Poll every 4s, but never while a mutation is in flight.
+let busyLock = false;
+setInterval(() => {
+  if (!busyLock) load().catch(() => {});
+}, 4000);
 
 load();
 </script>

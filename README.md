@@ -1,7 +1,5 @@
 # Trackfoots
 
-[![CI](https://github.com/Sahil711925/Trackfoots/actions/workflows/ci.yml/badge.svg)](https://github.com/Sahil711925/Trackfoots/actions/workflows/ci.yml)
-
 **Tamper-evident security logs — the proof survives the attacker.**
 
 A log store whose integrity can be *proved* after a breach, even when the attacker has root on the server.
@@ -100,7 +98,7 @@ starts the server and opens the browser.
 | `cli.js` | Terminal auditor (`node cli.js verify`) |
 | `scripts/` | Entry points: seed, anchor, attack, deploy, wallet, prove, bundle, chain verification |
 | `tests/` | 55 automated tests (`npm test`), CI on every push |
-| `docs/` | Architecture, demo script, judge Q&A, build checklist |
+| `docs/` | Architecture, demo script, judge Q&A, **prior art**, build checklist |
 | `LICENSE` | MIT |
 | `START_DEMO.bat` / `VERIFY_CHAIN.bat` | One-click launch and one-click chain proof |
 
