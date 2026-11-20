@@ -320,6 +320,25 @@ search "ssh login failed"   →  1–50 of 146
 
 ---
 
+## Quai Network
+
+The hackathon's chain, supported natively:
+
+```bash
+npm run quai:check      # compile with 0.8.20, derive a Quai address, price the deploy — spends nothing
+npm run quai:faucet -- <dropId>   # claim testnet QUAI (x402 proof-of-work payment, no account)
+npm run quai:deploy     # deploy to Orchard (chain 15000), then --anchor 1 to publish a checkpoint
+```
+
+Three Quai-specific things this handles that a naive port does not: the **9-bit routing prefix** in
+addresses (an Ethereum address is rejected as a Qi address), the **`quais` SDK** (ethers cannot sign
+Quai's Protobuf transactions), and the **compiler ceiling** of Solidity 0.8.20.
+
+Current status: verified against the live Orchard chain — chainId 15000, block 1,878,006, deployment
+priced at 333,698 gas — blocked only on testnet funds. Full detail in [`docs/QUAI.md`](docs/QUAI.md).
+
+---
+
 ## Real logs, not invented ones
 
 The demo seeds synthetic entries so the numbers are reproducible, but the importer takes actual logs:

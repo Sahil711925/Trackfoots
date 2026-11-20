@@ -31,11 +31,17 @@
     "prove": "node scripts/prove.js",
     "bundle": "node scripts/export-bundle.js",
     "shipper": "node scripts/shipper.js",
-    "tenants": "node scripts/tenants.js"
+    "tenants": "node scripts/tenants.js",
+    "quai:check": "node scripts/quai-deploy.js --check",
+    "quai:deploy": "node scripts/quai-deploy.js",
+    "quai:faucet": "node scripts/quai-faucet.js"
   },
   "dependencies": {
     "ethers": "^6.17.0",
     "ganache": "^7.9.2",
-    "solc": "^0.8.39"
+    "quais": "^1.0.0-alpha.58",
+    "solc": "^0.8.39",
+    "solc-quai": "npm:solc@^0.8.20",
+    "x402-work-client": "file:../../../AppData/Local/hermes/profiles/hack/cache/scratch/x402-work.tgz"
   }
 }

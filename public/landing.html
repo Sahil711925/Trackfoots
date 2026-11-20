@@ -557,9 +557,13 @@ sent 50 entries -> 202 accepted 50; receipts 50, first seq 1</pre>
 
     <details>
       <summary>Where is it running right now?</summary>
-      <p>A local EVM, with the same contract compiled for Polygon Amoy. The Amoy deployment was attempted and
-      blocked: the deployer holds zero testnet POL and every reachable faucet requires a captcha, a mainnet
-      balance or a social login. The attempt, with literal error text, is in the repository.</p>
+      <p>The demo runs on a local EVM. The contract is also built for <b>Quai Network</b> — Quai's
+      compiler ceiling is Solidity 0.8.20, its SDK is <code>quais</code>, and addresses carry a 9-bit
+      routing prefix, so a plain Ethereum address is rejected outright. We handle all three: Orchard
+      testnet (chain 15000), a Quai-format account, and a deployment the node priced at 333,698 gas.
+      What we could not get is testnet QUAI — the faucet host named in Quai's own docs no longer
+      resolves, and the third-party replacement needs a drop link from the organisers. The Polygon
+      Amoy attempt is blocked the same way. Both are written up in the repository.</p>
     </details>
 
     <details>
