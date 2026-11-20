@@ -8,3 +8,5 @@ server.log
 atk.json
 state.json
 deployments.json
+exports/
+*.html.bak

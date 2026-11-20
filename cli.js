@@ -43,6 +43,7 @@ console.log(line);
 console.log(`  entries on disk      ${r.entriesOnDisk}`);
 console.log(`  entries at write time ${r.entriesExpected}`);
 console.log(`  batches published     ${r.batchesPublished}`);
+console.log(`  root check            ${r.rootCheckMethod || 'not run'}`);
 console.log(`  hash chain            ${r.chainOk ? C.green('intact') : C.red(`broken at entry ${r.firstBrokenEntry}`)}`);
 if (r.corruptLines) console.log(`  corrupt lines         ${C.red(r.corruptLines)}`);
 
@@ -66,10 +67,19 @@ if (r.missingEntries.length) {
 }
 
 if (r.alteredEntries.length) {
-  console.log(`\n  ${C.yellow('ENTRIES CHANGED AFTER THE FACT')}  ${r.alteredEntries.length}`);
+  console.log(`\n  ${C.yellow('ENTRIES EDITED IN PLACE — content no longer matches its own fingerprint')}  ${r.alteredEntries.length}`);
   for (const a of r.alteredEntries.slice(0, 6)) {
-    console.log(C.yellow(`   entry ${a.seq}  was ${a.hashAtWriteTime.slice(0, 16)}…  now ${a.hashNow.slice(0, 16)}…`));
+    console.log(C.yellow(`   entry ${a.seq}  "${a.action}"  ${a.storedChash.slice(0, 12)}… -> ${a.recomputedChash.slice(0, 12)}…`));
   }
+  if (r.alteredEntries.length > 6) console.log(C.dim(`   …and ${r.alteredEntries.length - 6} more`));
+}
+
+if (r.unwitnessedEntries.length) {
+  console.log(`\n  ${C.yellow('FORGED ENTRIES — content the auditor never issued a receipt for')}  ${r.unwitnessedEntries.length}`);
+  for (const a of r.unwitnessedEntries.slice(0, 6)) {
+    console.log(C.yellow(`   entry ${a.seq}  "${a.action}"  hash ${a.hash.slice(0, 16)}…`));
+  }
+  if (r.unwitnessedEntries.length > 6) console.log(C.dim(`   …and ${r.unwitnessedEntries.length - 6} more`));
 }
 
 console.log(`\n  verdict: ${r.verdict === 'VERIFIED' ? C.green('these logs are genuine') : C.red('these logs cannot be trusted')}`);

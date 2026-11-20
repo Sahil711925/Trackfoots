@@ -58,6 +58,15 @@
   button.g{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#9ff0bd}
   button.g:hover{background:rgba(34,197,94,.18)}
   button:disabled{opacity:.5;cursor:wait}
+  .controls input{width:100px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);font:inherit;font-family:var(--mono);font-size:12.5px}
+  .controls input:focus{outline:none;border-color:var(--blue)}
+  .controls .sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+  .proofcard{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 16px;margin-bottom:14px;font-family:var(--mono);font-size:12px}
+  .proofcard h4{margin:0 0 8px;font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .proofcard .row{display:flex;justify-content:space-between;gap:14px;padding:3px 0;border-bottom:1px solid rgba(30,42,56,.5)}
+  .proofcard .row:last-child{border-bottom:none}
+  .proofcard .k{color:var(--muted)}
+  .yes{color:var(--green)} .no{color:var(--red)}
 
   .note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin-top:16px;line-height:1.6}
   details{margin-top:10px}
@@ -103,7 +112,13 @@
     <button class="r" onclick="attack('smart')">Attacker: careful forgery</button>
     <button class="g" onclick="verifyNow()">Run audit</button>
     <button onclick="reset()">Reset demo</button>
+    <span class="sep"></span>
+    <input id="seq" type="number" placeholder="entry #" value="250" />
+    <button class="g" onclick="proveEntry()">Prove entry</button>
+    <button onclick="bundleEntry()">Evidence bundle</button>
   </div>
+
+  <div id="proofout"></div>
 
   <div id="report"></div>
 
@@ -182,13 +197,74 @@ function paint(s){
 async function load(){ paint(await (await fetch('/api/state')).json()); }
 
 async function attack(mode){
-  document.querySelectorAll('button').forEach(b => b.disabled = true);
-  const res = await fetch('/api/attack', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({mode, batch:3})});
-  paint(await res.json());
-  document.querySelectorAll('button').forEach(b => b.disabled = false);
+  lock(true);
+  try {
+    const res = await fetch('/api/attack', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({mode, batch:3})});
+    paint(await res.json());
+  } finally { lock(false); }
 }
-async function verifyNow(){ await fetch('/api/verify', {method:'POST'}); load(); }
-async function reset(){ paint(await (await fetch('/api/reset', {method:'POST'})).json()); }
+async function verifyNow(){
+  lock(true);
+  try { await fetch('/api/verify', {method:'POST'}); await load(); } finally { lock(false); }
+}
+async function reset(){
+  lock(true);
+  try {
+    const res = await fetch('/api/reset', {method:'POST'});
+    const data = await res.json();
+    if (res.status === 409) { await load(); return; }
+    paint(data);
+  } finally { lock(false); }
+}
+
+async function proveEntry(){
+  const seq = Number(document.getElementById('seq').value);
+  if (!seq) return;
+  lock(true);
+  try {
+    const res = await fetch('/api/proof?seq=' + seq);
+    const d = await res.json();
+    if (res.status !== 200) {
+      document.getElementById('proofout').innerHTML =
+        `<div class="proofcard"><h4>Inclusion proof</h4><div class="no">${esc(d.error || 'no proof')}</div></div>`;
+      return;
+    }
+    document.getElementById('proofout').innerHTML = `
+      <div class="proofcard">
+        <h4>Inclusion proof · entry ${d.seq}</h4>
+        <div class="row"><span class="k">verdict</span><span class="${d.verified ? 'yes' : 'no'}">${d.verified ? 'INCLUDED — this line is inside the published root' : 'NOT INCLUDED — ' + esc(d.reason || 'proof failed')}</span></div>
+        <div class="row"><span class="k">batch</span><span>${d.batch} (${d.batchRange || ''})</span></div>
+        <div class="row"><span class="k">published root</span><span>${String(d.publishedRoot).slice(0,32)}…</span></div>
+        <div class="row"><span class="k">root rebuilt from this entry</span><span>${String(d.rebuiltRoot || '').slice(0,32)}…</span></div>
+        <div class="row"><span class="k">proof size</span><span>${d.proofLength} hashes for ${d.leafCount || 100} entries</span></div>
+        <div class="row"><span class="k">transaction</span><span>${String(d.txHash || '').slice(0,26)}…</span></div>
+      </div>`;
+  } finally { lock(false); }
+}
+
+async function bundleEntry(){
+  const seq = Number(document.getElementById('seq').value);
+  if (!seq) return;
+  lock(true);
+  try {
+    const res = await fetch('/api/bundle', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({seq})});
+    const d = await res.json();
+    document.getElementById('proofout').innerHTML = res.status === 200
+      ? `<div class="proofcard"><h4>Evidence bundle</h4>
+           <div class="row"><span class="k">written to</span><span>${esc(d.path)}</span></div>
+           <div class="row"><span class="k">open</span><a class="yes" href="${d.url}" target="_blank" rel="noopener">/${d.url.replace(/^\//,'')} ↗</a></div>
+           <div class="row"><span class="k">print</span><span>Ctrl+P in the opened page → A4 PDF</span></div>
+         </div>`
+      : `<div class="proofcard"><h4>Evidence bundle</h4><div class="no">${esc(d.error || 'failed')}</div></div>`;
+  } finally { lock(false); }
+}
+
+function lock(on){
+  document.querySelectorAll('button').forEach(b => {
+    b.disabled = on;
+    b.style.opacity = on ? .5 : 1;
+  });
+}
 
 load();
 </script>
