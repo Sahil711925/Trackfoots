@@ -52,10 +52,21 @@ function state() {
     .map((r) => r.entry)
     .slice(-250)
     .reverse();
+  const ledger = store.readLedger();
+  const chainExpected = String(process.env.ANCHOR_ON_CHAIN || '').toLowerCase() === 'true';
+  const onChain = ledger.filter((b) => b.chain !== 'LOCAL-SIMULATED').length;
   return {
     entries,
     total: logs.length,
-    ledger: store.readLedger().slice().reverse(),
+    ledger: ledger.slice().reverse(),
+    chain: {
+      expected: chainExpected,
+      network: process.env.CHAIN || null,
+      onChain,
+      total: ledger.length,
+      degraded: chainExpected && ledger.length > 0 && onChain === 0,
+      dataDir: store.DATA,
+    },
     report: verify(),
   };
 }

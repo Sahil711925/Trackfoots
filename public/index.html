@@ -67,6 +67,7 @@
   .proofcard .row:last-child{border-bottom:none}
   .proofcard .k{color:var(--muted)}
   .yes{color:var(--green)} .no{color:var(--red)}
+  .chainwarn{border:1px solid rgba(245,158,11,.45);background:rgba(245,158,11,.1);color:#fbbf24;padding:12px 16px;border-radius:12px;margin-bottom:14px;font:11.5px/1.6 var(--mono)}
 
   .note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin-top:16px;line-height:1.6}
   details{margin-top:10px}
@@ -88,6 +89,7 @@
   </header>
 
   <div id="banner" class="banner"></div>
+  <div id="chainwarn" class="chainwarn" style="display:none"></div>
 
   <div class="stats">
     <div class="stat"><div class="k">Entries on disk</div><div class="v" id="s-disk">–</div></div>
@@ -175,7 +177,16 @@ function paint(s){
   document.getElementById('anchors').innerHTML = s.ledger.map(b => `
     <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t">${b.chain === 'LOCAL-SIMULATED' ? 'local' : b.chain}</span></div>`).join('');
   const onChain = s.ledger.filter(b => b.chain !== 'LOCAL-SIMULATED').length;
+  const chainInfo = s.chain || {};
   document.getElementById('anchor-note').textContent = `${s.ledger.length} roots · ${onChain} on-chain`;
+
+  const warn = document.getElementById('chainwarn');
+  if (chainInfo.degraded) {
+    warn.style.display = 'block';
+    warn.textContent = `CHAIN DEGRADED — anchoring is configured (${chainInfo.network}) but 0 of ${chainInfo.total} roots reached it. Roots are in the local ledger only. Check that the chain process is running.`;
+  } else {
+    warn.style.display = 'none';
+  }
 
   if (tampered && r.badBatches.length){
     const missing = r.missingEntries.slice(0,10).map(m =>
