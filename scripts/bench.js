@@ -324,6 +324,11 @@ async function runBench(opts = {}) {
     console.log('');
   }
 
+  // Don't leave 20 MB of throwaway log behind when called as a library.
+  if (!opts.keepTemp) {
+    try { fs.rmSync(TEMP_DATA, { recursive: true, force: true }); } catch { /* best effort */ }
+  }
+
   return result;
 }
 

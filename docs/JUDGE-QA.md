@@ -57,7 +57,20 @@ Then, if they want more:
 > tests whether the last batch is bad, and falls back to a linear scan when an attacker tampers with one early batch
 > and stops. The report records which method ran."
 
-**8. "Did you build this?"**
+**8. "How many events per second? What does this cost to run?"**
+> "On this laptop, 88,700 entries per second through the chain and batching — 11 microseconds each. Re-verifying
+> 50,000 entries takes 204 milliseconds. Anchoring costs about 73,900 gas per checkpoint, which at L2 prices is
+> $2.30 per 100,000 events — the same as the published figure in the arXiv paper, because gas sets that price,
+> not our code. The honest limit is the audit pass: it re-derives every checkpoint prefix, so it's quadratic in
+> batches × entries. Fine at 1,200, about 2.5 seconds at 10,000. The fix is incremental roots, and it's written
+> in the README as not done."
+
+**9. "Does this meet CERT-In retention?"**
+> "`npm run retention` reports it: 180-day window, what's inside, what's expired, oldest entry age. And it refuses
+> to prune anything that sits inside a published batch — deleting leaves that are already anchored destroys
+> evidence rather than expiring it. That refusal is the point: retention must not become a way to cover tracks."
+
+**10. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

@@ -103,6 +103,9 @@ starts the server and opens the browser.
 | `public/auditor.html` | The auditor's own screen — never touches the operator's logs |
 | `lib/chain.js` | Contract compile, deploy, anchor, read-back |
 | `lib/seed.js` | Synthetic log generator (1,200 demo entries) |
+| `lib/formats.js` | Real parsers: OpenSSH `auth.log`, nginx combined, RFC 3164 syslog |
+| `lib/retention.js` | CERT-In 180-day policy: what is in scope, what has expired, what must not be pruned |
+| `samples/` | 157 lines of authentic-format log files used by the importer and its tests |
 | `lib/env.js` | Config loader — `.env` always wins over inherited shell values |
 | `server.js` | Web server + JSON API (`/api/state`, `/api/verify`, `/api/attack`, `/api/proof`, `/api/bundle`) |
 | `public/index.html` | The demo UI — one file, no build step |
@@ -152,6 +155,48 @@ bundle, or press **Tamper with it** to watch the verification break.
 
 Receipts are signed with HMAC-SHA256 using a key held **outside** `data/` (environment/KMS). An intruder
 with root can read every log file and still cannot forge a receipt for a line that was never written.
+
+---
+
+## Real logs, not invented ones
+
+The demo seeds synthetic entries so the numbers are reproducible, but the importer takes actual logs:
+
+```bash
+npm run import -- samples/auth.log        # OpenSSH auth.log
+npm run import -- samples/access.log      # nginx combined
+npm run import -- samples/syslog.log      # RFC 3164 syslog
+```
+
+```
+detected format : sshd
+lines read      : 56
+parsed          : 52
+skipped         : 4
+written         : 52 entries
+```
+
+Truncated writes, `-- MARK --` rotation markers and binary noise are skipped rather than mangled into
+entries — a parser that silently invents a log line is worse than one that refuses.
+
+## Performance
+
+Measured on a laptop (i5-1135G7, 7.8 GB RAM, Node 26), median of repeated runs — see
+[`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the method and caveats.
+
+| Metric | Result |
+|---|---|
+| Ingest | **88,700 entries/s** (11.3 µs/entry, 386 B/entry) |
+| Hash-chain re-verify | **4.1 µs/entry** (50k entries in 204 ms) |
+| Merkle root, 100 leaves | **0.58 ms** (5.8 µs/leaf) |
+| Merkle root, 10,000 leaves | 39 ms (3.9 µs/leaf) |
+| Anchor gas | ~73,905 gas (static estimate from the contract) |
+| Anchoring cost | **$2.30 per 100K events** at 100-event epochs — matches arXiv 2609.01931, as expected since gas sets the price, not our code |
+
+Honest caveats: single-threaded, laptop CPU, no `fsync` (durability covers a process crash, not power loss),
+and the full audit pass is **quadratic in batches × entries** because it re-derives every checkpoint prefix —
+fine at 1,200 entries (60 ms) and ~2.5 s at 10,000. The fix is incremental checkpoint roots; it is not
+implemented, and the doc says so.
 
 Expected output of the middle step, which is the whole point:
 
