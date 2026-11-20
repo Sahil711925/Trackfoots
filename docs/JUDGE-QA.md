@@ -76,7 +76,12 @@ Then, if they want more:
 > 401 without the key, per-index rejection reasons for anything malformed. `GET /api/stats` reports the
 > unanchored backlog, which is the anchor window made visible."
 
-**11. "Did you build this?"**
+**11. "Who gets told when you detect tampering?"**
+> "An alert record is written, shown under the banner in red, and POSTed to whatever `ALERT_WEBHOOK` points at.
+> One per minute per type, so a polling dashboard can't turn one incident into a hundred pages. It's a
+> fire-and-forget POST with no retry — the honest trade for a 24-hour build, and the README says so."
+
+**12. "Did you build this?"**
 > "We built it during the hackathon with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and
 > UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
 

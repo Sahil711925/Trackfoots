@@ -158,6 +158,27 @@ with root can read every log file and still cannot forge a receipt for a line th
 
 ---
 
+## Somebody gets told
+
+Detection without notification is a log line, not a control. A tamper event writes an alert record and,
+if `ALERT_WEBHOOK` is set, POSTs it to Slack/PagerDuty/anything that accepts JSON:
+
+```
+ALERT  tamper-detected · 34 entries deleted and 7 rewritten in batch 3 · raised 21:25:57 · dispatched
+```
+
+It appears under the banner in the UI, so the presenter can show the moment the system notices — and the
+one-per-minute guard means a polling page cannot turn one incident into a hundred pages.
+
+```
+GET /api/alerts   →  { alerts: [...], webhook: false }
+```
+
+Honest scope: fire-and-forget POST, no retries, no queue. If the network is down the alert is in the local
+log and nowhere else. That is the right trade for a 24-hour build and the wrong one for production.
+
+---
+
 ## Writing logs to it (the part that makes it a product)
 
 An application posts a line and gets back a **signed receipt** — proof of what it wrote, at the moment

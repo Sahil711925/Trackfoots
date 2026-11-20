@@ -168,6 +168,15 @@ function paint(s){
       ${r.chainOk ? 'The hash chain is internally consistent — this attacker recomputed every hash. Only the published root caught him.' : `Hash chain broken at entry ${r.firstBrokenEntry}.`}</p>`;
   }
 
+  // An alert nobody sees is not an alert: surface the most recent one under the banner.
+  const al = (s.alerts || [])[0];
+  if (al) {
+    b.innerHTML += `<p style="margin-top:10px;border-top:1px solid rgba(239,68,68,.25);padding-top:10px">
+      <span class="pill bad" style="display:inline-block;font-size:10px;padding:2px 7px">ALERT</span>
+      <code>${esc(al.type)}</code> · ${esc(al.message)} · raised ${new Date(al.ts).toLocaleTimeString('en-IN',{hour12:false})}
+      ${al.dispatched ? '· dispatched' : '· repeat suppressed'}</p>`;
+  }
+
   document.getElementById('s-disk').textContent = fmt(r.entriesOnDisk);
   document.getElementById('s-disk').className = 'v ' + (tampered ? 'r' : '');
   document.getElementById('s-expected').textContent = fmt(r.entriesExpected);

@@ -21,6 +21,7 @@ const { buildBundle } = require('./lib/bundle');
 const { checkChainOfCheckpoints } = require('./lib/consistency');
 const { verifyPayload } = require('./lib/auditor');
 const { ingest, MAX_BATCH } = require('./lib/ingest');
+const alerts = require('./lib/alerts');
 
 const PORT = Number(process.env.PORT || 5173);
 const ROOT = __dirname;
@@ -71,6 +72,7 @@ function state() {
     total: logs.length,
     ledger: ledger.slice().reverse(),
     consistency,
+    alerts: alerts.recent(5),
     chain: {
       expected: chainExpected,
       network: process.env.CHAIN || null,
@@ -147,6 +149,10 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       return json(res, 400, { error: err.message });
     }
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/alerts') {
+    return json(res, 200, { alerts: alerts.recent(50), webhook: Boolean(process.env.ALERT_WEBHOOK) });
   }
 
   if (req.method === 'GET' && url.pathname === '/api/stats') {
@@ -287,7 +293,15 @@ const server = http.createServer(async (req, res) => {
         try {
           const { mode = 'smart', batch = 3 } = body ? JSON.parse(body) : {};
           const result = attack(mode, batch);
-          return json(res, 200, { result, ...state() });
+          const st = state();
+          if (st.report.verdict !== 'VERIFIED') {
+            alerts.raise(
+              'tamper-detected',
+              `${result.deleted} entries deleted and ${result.edited} rewritten in batch ${result.batch}`,
+              { severity: 'critical', batch: result.batch, deleted: result.deleted, edited: result.edited, mode: result.mode }
+            );
+          }
+          return json(res, 200, { result, ...st });
         } catch (err) {
           return json(res, 400, { error: err.message });
         }
