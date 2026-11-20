@@ -1,119 +1,154 @@
-# TRACKFOOTS
+# Trackfoots
 
 **Tamper-evident security logs — the proof survives the attacker.**
 
-The Big Hack 2.0 · Track 02 (Cybersecurity & Blockchain) · Problem **B3 — "Logs the attacker can't erase"**
+A log store whose integrity can be *proved* after a breach, even when the attacker has root on the server.
+Built for **The Big Hack 2.0**, Track 02 (Cybersecurity & Blockchain), problem **B3 — "Logs the attacker can't erase."**
 
 ---
 
-## The problem in three lines
+## The problem
 
-When a company is breached, investigators reconstruct the attack from its logs. CERT-In requires Indian
-organisations to keep logs for **180 days** and report certain incidents within **6 hours**.
+CERT-In requires Indian organisations to keep security logs for **180 days** and report specified incidents
+within **6 hours**. Those logs are the only record of how a breach happened and what was taken.
 
-But the logs live on the same machine the attacker now controls. With root access he deletes the
-incriminating lines, and the company can no longer prove what happened — to a court, an auditor, or a regulator.
+They also live on the same machine the attacker now controls. With root access he deletes the incriminating
+lines, and the company can prove nothing — not to a court, not to an auditor, not to the regulator.
 
-**TRACKFOOTS makes the logs destructible but the proof indestructible.**
+**Hashing the logs locally does not fix this.** A capable attacker edits an entry and then recomputes every
+hash downstream. The file becomes internally perfect and every local check passes. We built that attacker and
+we demonstrate him.
+
+---
+
+## How it works
+
+```
+   write                      seal                       publish                    verify
+┌───────────┐   ┌──────────────────────┐   ┌────────────────────┐   ┌──────────────────────────┐
+│ log entry │──▶│ hash chain           │──▶│ Merkle root / 100  │──▶│ LogAnchor.sol (EVM)      │
+│  + receipt│   │ H(prev ‖ this)       │   │ 100 leaves → 32 B  │   │ one root per batch,      │
+└───────────┘   └──────────────────────┘   └────────────────────┘   │ write-once, public       │
+                                                                     └──────────────────────────┘
+                                                                              │
+                                          ┌───────────────────────────────────┘
+                                          ▼
+                              ┌────────────────────────────┐
+                              │ auditor: three checks      │
+                              │ 1 chain  2 root  3 receipt │
+                              └────────────────────────────┘
+```
+
+1. **Every entry is chained.** `hash = sha256(prevHash ‖ seq ‖ ts ‖ actor ‖ action ‖ meta)`. Change one line and
+   every hash after it breaks.
+2. **Every 100 entries become one fingerprint.** A Merkle root — 32 bytes covering a whole batch.
+3. **The root is published on-chain.** `LogAnchor.anchor(seq, root, org)` stores it and **refuses to ever
+   overwrite that sequence number**. Not by the operator, not by the attacker.
+4. **Every write also issues a receipt.** The content fingerprint goes to the auditor at write time, outside the
+   server, so deleted lines can later be proven to have existed.
+
+Verification then compares three things: the recomputed chain, the recomputed roots, and the receipts.
+
+---
 
 ## Why the blockchain is load-bearing
 
-A hash chain alone fails against a root-level attacker: he edits an entry, then recomputes every hash
-downstream. The file becomes internally perfect and every local check passes. We built that attacker —
-`npm run attack smart` — and a hash chain alone cannot catch him.
+Remove the chain and the design fails its own threat model: the attacker owns the server, so anything stored
+only on the server can be rewritten. The chain supplies the one property a compromised server cannot manufacture —
+**an independent witness that recorded the value before the attack.**
 
-What he cannot do is change a fingerprint that was already **published**:
+That is the test the track rule sets, and it is the reason `LogAnchor` exists rather than a database row.
 
-1. every entry is hashed together with the entry before it → editing one breaks all later hashes
-2. every 100 entries are reduced to a single **Merkle root**
-3. that root is written to `LogAnchor` on **Polygon Amoy** — replicated across every node on the network
-4. the write is one-way: the contract refuses to overwrite an existing `seq`
+---
 
-The server operator cannot rewrite the chain. The attacker cannot reach it. That asymmetry is the product.
-Remove the chain and there is no independent witness — which is exactly the test the track rule sets.
-
-## Live verification, in three commands
-
-```bash
-npm run seed        # 1,200 synthetic log entries
-npm run anchor      # Merkle roots published
-npm run attack smart   # attacker deletes 34 entries and rebuilds every hash
-npm run verify      # -> TAMPERED, batch 3, 34 deleted entries recovered
-```
-
-The smart attacker leaves an **internally perfect** file. `verify` still catches him, because the root
-published at the time no longer matches the data. The deleted lines are recovered from receipts the
-auditor was handed at write time — copies that were never on the compromised server.
-
-## Architecture
-
-```
-  app ──write──► logs.jsonl        hash-linked, append-only
-                    │
-                    ├─► auditor/receipts.jsonl     content hash per entry, kept off the server
-                    │
-                    └─► Merkle root per 100 entries
-                              │
-                              ▼
-                        LogAnchor.sol  (Polygon Amoy)
-                        mapping(seq => bytes32 root)
-```
-
-| Piece | File | Purpose |
-|---|---|---|
-| Hash chain | `lib/store.js` | each entry binds the previous entry's hash |
-| Merkle tree | `lib/merkle.js` | N leaves → 1 root, plus inclusion proofs |
-| On-chain anchor | `contracts/LogAnchor.sol`, `lib/chain.js` | one root per batch, immutable, public |
-| Auditor | `lib/verify.js` | chain check, root check, receipt check |
-| Attacker | `lib/attack.js` | naive and sophisticated tampering |
-| UI | `public/index.html`, `server.js` | what the presenter shows |
-
-## Running it
+## Quick start
 
 ```bash
 npm install
-node scripts/wallet.js     # creates a testnet wallet, saves key to .env
-# fund the printed address from a Polygon Amoy faucet, then:
-npm run deploy             # compiles + deploys LogAnchor
-echo "ANCHOR_ON_CHAIN=true" >> .env
-npm run seed && npm run anchor
-node server.js             # http://localhost:5173
+node scripts/wallet.js          # creates a testnet wallet (optional)
+npm run deploy                  # compile + deploy LogAnchor
+npm run seed && npm run anchor  # 1,200 entries, roots published
+node server.js                  # http://localhost:5173
 ```
 
-No wallet funds? Set `ANCHOR_ON_CHAIN=false` (default). Roots are written to `data/ledger.jsonl`
-instead — the same fingerprints, a local witness. The rules allow a local blockchain; the on-chain
-path is a config change, not a rewrite.
+On Windows, double-click **`START_DEMO.bat`** — it starts a local EVM chain, deploys the contract if missing,
+starts the server and opens the browser.
 
-## Data
+---
 
-All 1,200 log entries are **synthetic**. No real user data, no real company logs, no personal
-information touches the chain — only Merkle roots, which are one-way fingerprints.
+## Repository map
 
-## What this does not protect against
+| Folder / file | What it is |
+|---|---|
+| `contracts/LogAnchor.sol` | The entire on-chain half: one mapping, one write-once `anchor()` |
+| `lib/merkle.js` | SHA-256, Merkle root, inclusion proof, proof verification |
+| `lib/store.js` | Append-only log, hash chaining, receipts, batch size |
+| `lib/verify.js` | The auditor: chain check, root check, receipt check, bad-batch search |
+| `lib/attack.js` | Two attacker profiles — naive deletions and a careful forger |
+| `lib/proof.js` | Inclusion proof for a single entry |
+| `lib/bundle.js` | Printable auditor evidence bundle (single entry, A4, self-contained) |
+| `lib/chain.js` | Contract compile, deploy, anchor, read-back |
+| `lib/seed.js` | Synthetic log generator (1,200 demo entries) |
+| `lib/env.js` | Config loader — `.env` always wins over inherited shell values |
+| `server.js` | Web server + JSON API (`/api/state`, `/api/verify`, `/api/attack`, `/api/proof`, `/api/bundle`) |
+| `public/index.html` | The demo UI — one file, no build step |
+| `cli.js` | Terminal auditor (`node cli.js verify`) |
+| `scripts/` | Entry points: seed, anchor, attack, deploy, wallet, prove, bundle, chain verification |
+| `tests/` | 32 automated tests (`npm test`) |
+| `docs/` | Architecture, demo script, judge Q&A, build checklist |
+| `START_DEMO.bat` / `VERIFY_CHAIN.bat` | One-click launch and one-click chain proof |
 
-- **The anchor window.** Entries written since the last batch was published are
-  protected by the hash chain only. A root-level attacker inside that window can still delete them.
-  Closing it needs immediate anchoring (more gas) or per-write receipts — we implement receipts
-  auditor-side and disclose the gap rather than hide it.
-- **Anchoring liveness.** An attacker who blocks outbound traffic stops new anchors. He cannot rewrite
-  history, but he can stop new entries from being witnessed; this is detectable as a missing `seq`
-  and should raise an alarm (not yet implemented).
-- **The signing key.** If the server's anchor key is stolen, the attacker can publish *new* roots.
-  He still cannot alter old ones, so the damage is bounded to the window in which he held the key.
-- **Compromised receipts.** We assume the auditor store is on a different machine with a different trust
-  boundary. If the attacker reaches both, deleted content is provable as missing but not recoverable.
+---
 
-## Prior art, and what is different
+## Prove it yourself
 
-Merkle-logging is not new: Certificate Transparency (RFC 6962), Trillian, Sigstore Rekor and immudb all
-anchor append-only trees. TRACKFOOTS is not a new primitive.
+```bash
+node scripts/attack.js smart 3    # attacker deletes 34 entries and rebuilds every hash
+node cli.js verify                # -> TAMPERED, batch 3 named, 34 entries recovered
+node scripts/verify-chain.js      # -> re-reads roots from the chain: 12 match, 0 differ
+node scripts/prove.js 250         # -> inclusion proof: entry 250 was inside the published batch
+node scripts/export-bundle.js 250 # -> exports/bundle-250.html, the auditor artifact
+npm test                          # -> 32 passing
+```
 
-What is missing in practice is the **compliance artifact**: CERT-In's 6-hour reporting and 180-day
-retention duties assume logs are trustworthy, and in 2026 CERT-In itself moved audit-certificate
-verification onto a blockchain (AMBAK). TRACKFOOTS applies the same pattern one level down — from the
-certificate to the evidence behind it — and produces an auditor-ready bundle instead of a research log.
+Expected output of the middle step, which is the whole point:
 
-## Honest scoring note
+```
+✗ LOG INTEGRITY: TAMPERED
+  entries on disk      1166
+  entries at write time 1200
+  hash chain            intact          ← the file is internally consistent
+  root check            binary-search
+  MISMATCH AGAINST PUBLISHED ROOTS
+   batch 3  entries 201-300
+  DELETED ENTRIES RECOVERED FROM AUDITOR RECEIPTS  34
+```
 
-The pattern is established; the framing, the incident-evidence workflow, and the attack demonstration
-are ours. Judges should discount Innovation accordingly and weigh Technical depth and Evidence.
+The chain says **intact** and the verdict says **TAMPERED**. Both are true — he rebuilt every hash, and the
+published root still disagrees.
+
+---
+
+## Honest limitations
+
+- **Anchor window.** Entries written since the last batch was published are protected by the hash chain only.
+  Closing it needs immediate anchoring (more gas) or per-write receipts promoted to the primary path.
+- **Anchoring liveness.** An attacker who blocks outbound traffic stops new anchors. History cannot be rewritten,
+  but new entries go unwitnessed; this is detectable as a gap in sequence numbers (alarm not yet implemented).
+- **Signing key.** If the anchor key is stolen, the attacker can publish *new* roots. He can never alter old ones.
+- **Receipts.** In this build they live in a separate directory on the same machine — a trust-domain simulation,
+  not real isolation.
+- **Chain.** The demo runs against a local EVM chain; the same contract compiles and deploys to Polygon Amoy
+  unchanged (`CHAIN=amoy`). No public-chain deployment is presented as done.
+- **Data.** All 1,200 log entries are synthetic. No personal data is written to the chain — only Merkle roots.
+
+## Prior art
+
+Merkle logging is established: Certificate Transparency (RFC 6962), Trillian, Sigstore Rekor, immudb. Trackfoots
+is not a new primitive. The contribution is the **incident-evidence workflow** for CERT-In-style obligations —
+a write-once anchor, a three-way auditor, a single-entry inclusion proof and a court-ready bundle — together with
+a demonstration that a careful forger defeats local hashing and does not defeat this.
+
+---
+
+*Track 02 · B3 · The Big Hack 2.0 · Acharya Institute of Technology, Bengaluru*
