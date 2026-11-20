@@ -1,5 +1,5 @@
 {
-  "name": "witness",
+  "name": "trackfoots",
   "version": "1.0.0",
   "private": true,
   "description": "Tamper-evident log integrity: hash-chained logs whose Merkle roots are anchored to a public ledger, so a root-level attacker cannot rewrite history.",

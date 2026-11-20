@@ -1,4 +1,4 @@
-# WITNESS
+# TRACKFOOTS
 
 **Tamper-evident security logs — the proof survives the attacker.**
 
@@ -14,7 +14,7 @@ organisations to keep logs for **180 days** and report certain incidents within 
 But the logs live on the same machine the attacker now controls. With root access he deletes the
 incriminating lines, and the company can no longer prove what happened — to a court, an auditor, or a regulator.
 
-**WITNESS makes the logs destructible but the proof indestructible.**
+**TRACKFOOTS makes the logs destructible but the proof indestructible.**
 
 ## Why the blockchain is load-bearing
 
@@ -106,11 +106,11 @@ information touches the chain — only Merkle roots, which are one-way fingerpri
 ## Prior art, and what is different
 
 Merkle-logging is not new: Certificate Transparency (RFC 6962), Trillian, Sigstore Rekor and immudb all
-anchor append-only trees. WITNESS is not a new primitive.
+anchor append-only trees. TRACKFOOTS is not a new primitive.
 
 What is missing in practice is the **compliance artifact**: CERT-In's 6-hour reporting and 180-day
 retention duties assume logs are trustworthy, and in 2026 CERT-In itself moved audit-certificate
-verification onto a blockchain (AMBAK). WITNESS applies the same pattern one level down — from the
+verification onto a blockchain (AMBAK). TRACKFOOTS applies the same pattern one level down — from the
 certificate to the evidence behind it — and produces an auditor-ready bundle instead of a research log.
 
 ## Honest scoring note

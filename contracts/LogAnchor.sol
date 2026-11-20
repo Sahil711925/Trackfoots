@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * LogAnchor — the entire on-chain half of WITNESS.
+ * LogAnchor — the entire on-chain half of TRACKFOOTS.
  *
  * It stores one 32-byte fingerprint per batch and nothing else.
  * No log data, no user data, no personal information ever touches the chain —

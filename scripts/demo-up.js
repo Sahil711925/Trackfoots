@@ -3,7 +3,7 @@
  * demo-up.js — one command that brings the whole demo to life.
  *
  * 1. starts a local EVM chain (ganache) if it is not already running
- * 2. starts the WITNESS server
+ * 2. starts the TRACKFOOTS server
  *
  * Why this exists: at the venue, nobody should have to remember three terminals.
  */

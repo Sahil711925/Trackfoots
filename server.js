@@ -155,5 +155,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n  WITNESS demo  ->  http://localhost:${PORT}\n`);
+  console.log(`\n  TRACKFOOTS demo  ->  http://localhost:${PORT}\n`);
 });

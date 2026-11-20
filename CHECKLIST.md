@@ -1,4 +1,4 @@
-# WITNESS — build checklist
+# TRACKFOOTS — build checklist
 
 Status as of Fri 20 Nov, 17:20 · ~19h40m to submission.
 
@@ -21,7 +21,7 @@ Status as of Fri 20 Nov, 17:20 · ~19h40m to submission.
 - [x] README with threat model + honest limitations
 - [x] DEMO.md with timed script and judge Q&A
 - [x] Idea submission text prepared
-- [x] Supporting PDF (`Documents/bighack/WITNESS_submission.pdf`, 84 KB)
+- [x] Supporting PDF (`Documents/bighack/TRACKFOOTS_submission.pdf`, 84 KB)
 
 ## ⬜ NOT DONE — in execution order
 
