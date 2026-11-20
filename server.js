@@ -88,11 +88,31 @@ function state() {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
-  if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+  // Marketing page at the root; the product itself lives at /app.
+  if (req.method === 'GET' && url.pathname === '/') {
+    const file = path.join(ROOT, 'public', 'landing.html');
+    if (fs.existsSync(file)) {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store, must-revalidate' });
+      return res.end(fs.readFileSync(file));
+    }
+  }
+
+  if (req.method === 'GET' && (url.pathname === '/app' || url.pathname === '/index.html')) {
     const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'));
     // no-store: otherwise the browser silently serves a cached copy and edits never appear
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store, must-revalidate' });
     return res.end(html);
+  }
+
+  // One image the landing page needs. Kept explicit rather than serving a directory.
+  if (req.method === 'GET' && url.pathname === '/dashboard.png') {
+    const file = path.join(ROOT, 'public', 'dashboard.png');
+    if (!fs.existsSync(file)) {
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      return res.end('not found');
+    }
+    res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=300' });
+    return res.end(fs.readFileSync(file));
   }
 
   if (req.method === 'GET' && url.pathname === '/api/state') return json(res, 200, state());

@@ -11,8 +11,12 @@ cd C:\Users\sahil\Documents\bighack\witness
 node server.js
 ```
 
-Open `http://localhost:5173` in Chrome. Click **Reset demo**. Confirm the banner is green and the log
-table shows `ssh login accepted`, `sudo /usr/bin/apt update` — real-format lines, not fixtures.
+Open `http://localhost:5173` in Chrome — that is the **marketing page**. Click **Open the live dashboard**
+(the button goes to `/app`). Confirm the banner is green and the log table shows `ssh login accepted`,
+`sudo /usr/bin/apt update` — real-format lines, not fixtures.
+
+> If judges are still walking up, the landing page is the thing to leave on screen: serif, white, calm, and it
+> says what the product is before you open your mouth. The moment you start talking, click through to `/app`.
 
 Have the terminal open in a second window, already `cd`-ed into the folder. Have `exports\` open in
 Explorer so the incident report is one double-click away.

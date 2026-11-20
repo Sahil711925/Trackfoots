@@ -5,7 +5,8 @@ cd /d "%~dp0"
 echo.
 echo   Starting TRACKFOOTS...
 echo   Leave this window open. Closing it stops the demo.
-echo   Dashboard:  http://localhost:5173
+echo   Landing:    http://localhost:5173
+echo   Dashboard:  http://localhost:5173/app
 echo   Public:     http://localhost:5173/status
 echo.
 start "" http://localhost:5173
