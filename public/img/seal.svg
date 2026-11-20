@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Anchored seal">
+  <defs>
+    <linearGradient id="saff" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF8A2B"/>
+      <stop offset="0.55" stop-color="#FF671F"/>
+      <stop offset="1" stop-color="#D94B12"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF671F" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FF671F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="200" cy="200" r="198" fill="url(#glow)"/>
+  <circle cx="200" cy="200" r="150" fill="none" stroke="url(#saff)" stroke-width="10"/>
+  <circle cx="200" cy="200" r="134" fill="none" stroke="#1A1A1A" stroke-opacity="0.18" stroke-width="1.5"/>
+
+  <!-- tick ring -->
+  <g stroke="#1A1A1A" stroke-opacity="0.28" stroke-width="2">
+    <line x1="200" y1="42" x2="200" y2="56"/>
+    <line x1="200" y1="344" x2="200" y2="358"/>
+    <line x1="42" y1="200" x2="56" y2="200"/>
+    <line x1="344" y1="200" x2="358" y2="200"/>
+  </g>
+
+  <!-- chain glyph: three links -->
+  <g fill="none" stroke="url(#saff)" stroke-width="11" stroke-linecap="round">
+    <rect x="118" y="176" width="64" height="48" rx="24" transform="rotate(-12 150 200)"/>
+    <rect x="170" y="176" width="64" height="48" rx="24"/>
+    <rect x="222" y="176" width="64" height="48" rx="24" transform="rotate(12 254 200)"/>
+  </g>
+
+  <!-- root node -->
+  <circle cx="200" cy="200" r="9" fill="#1A1A1A"/>
+
+  <!-- curved caption -->
+  <path id="cap" d="M 200 200 m -104 0 a 104 104 0 1 1 208 0" fill="none"/>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="15.5" letter-spacing="7.5" fill="#1A1A1A" fill-opacity="0.72">
+    <textPath href="#cap" startOffset="50%" text-anchor="middle">ANCHORED · TAMPER-EVIDENT</textPath>
+  </text>
+  <path id="cap2" d="M 200 200 m -104 0 a 104 104 0 1 0 208 0" fill="none"/>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="13" letter-spacing="6" fill="#1A1A1A" fill-opacity="0.5">
+    <textPath href="#cap2" startOffset="50%" text-anchor="middle">TRACKFOOTS · B3</textPath>
+  </text>
+</svg>

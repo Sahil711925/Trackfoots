@@ -104,6 +104,24 @@ const server = http.createServer(async (req, res) => {
     return res.end(html);
   }
 
+  // Fonts and artwork for the landing page. Extension whitelist + traversal guard: this serves
+  // two directories, not the whole filesystem.
+  if (req.method === 'GET' && (url.pathname.startsWith('/fonts/') || url.pathname.startsWith('/img/'))) {
+    const PUBLIC = path.join(ROOT, 'public');
+    const file = path.join(PUBLIC, decodeURIComponent(url.pathname).replace(/^\/+/, ''));
+    const TYPES = {
+      '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf',
+      '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
+    };
+    const type = TYPES[path.extname(file).toLowerCase()];
+    if (!file.startsWith(PUBLIC) || !type || !fs.existsSync(file)) {
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      return res.end('not found');
+    }
+    res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=600' });
+    return res.end(fs.readFileSync(file));
+  }
+
   // One image the landing page needs. Kept explicit rather than serving a directory.
   if (req.method === 'GET' && url.pathname === '/dashboard.png') {
     const file = path.join(ROOT, 'public', 'dashboard.png');
