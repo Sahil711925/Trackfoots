@@ -1,0 +1,10 @@
+node_modules/
+data/
+.env
+deployments.json
+npm*.log
+server.log
+*.log
+atk.json
+state.json
+deployments.json

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>WITNESS — The Big Hack 2.0 submission</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.5pt/1.45 -apple-system, "Segoe UI", Inter, Arial, sans-serif; color: #12161c; margin: 0; }
+  .head { border-bottom: 2px solid #12161c; padding-bottom: 10px; margin-bottom: 16px; }
+  h1 { font-size: 26pt; margin: 0; letter-spacing: .16em; }
+  .sub { font-size: 10.5pt; color: #4b5563; margin-top: 4px; }
+  .track { display: inline-block; font: 8.5pt ui-monospace, Consolas, monospace; letter-spacing: .1em;
+           border: 1px solid #12161c; padding: 3px 8px; margin-top: 8px; }
+  h2 { font-size: 10pt; letter-spacing: .13em; text-transform: uppercase; margin: 18px 0 7px;
+       border-bottom: 1px solid #d5dbe3; padding-bottom: 4px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 0 0 8px; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  .lead { font-size: 12pt; line-height: 1.4; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 6px 0 10px; }
+  th, td { border: 1px solid #d5dbe3; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #f3f5f8; font-weight: 600; width: 30%; }
+  code { font: 9pt ui-monospace, Consolas, monospace; background: #f3f5f8; padding: 1px 4px; }
+  .quote { border-left: 3px solid #12161c; padding: 4px 0 4px 12px; font-style: italic; margin: 10px 0; }
+  .foot { margin-top: 18px; padding-top: 8px; border-top: 1px solid #d5dbe3; font-size: 8.5pt; color: #6b7280; }
+  .two { display: flex; gap: 18px; }
+  .two > div { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>WITNESS</h1>
+  <div class="sub">Tamper-evident security logs — the proof survives the attacker</div>
+  <div class="track">THE BIG HACK 2.0 · TRACK 02 · PROBLEM B3 — LOGS THE ATTACKER CAN'T ERASE</div>
+</div>
+
+<p class="lead">An attacker with root access can delete a company's logs. We make the logs deletable but the proof
+permanent — by publishing one Merkle root per batch to a blockchain, so tampering is detectable and the deleted
+lines remain provable.</p>
+
+<h2>The problem</h2>
+<p>CERT-In requires Indian organisations to retain security logs for <b>180 days</b> and report specified incidents
+within <b>6 hours</b>. Those logs are the only record of how a breach happened and what was taken.</p>
+<p>But the logs live on the same machine the attacker now controls. With root access he deletes the incriminating
+lines, and the company can no longer prove anything — to a court, an auditor, or the regulator. In the WazirX and
+CoinDCX cases, the losses were approved through interfaces nobody could read; in most enterprise breaches the
+forensic trail is destroyed the same way.</p>
+<p><b>Local hashing alone does not fix this.</b> A capable attacker edits an entry and then recomputes every hash
+downstream. The file becomes internally perfect and every local check passes. We built that attacker and
+demonstrated it.</p>
+
+<h2>Our approach</h2>
+<ul>
+  <li><b>Hash chain.</b> Every entry is hashed together with the previous entry's hash. One edit breaks every
+      hash after it.</li>
+  <li><b>Merkle batching.</b> Every 100 entries are reduced to a single 32-byte root, so only one small value
+      needs to be published per batch.</li>
+  <li><b>On-chain anchoring.</b> The root is written to the <code>LogAnchor</code> smart contract. The contract
+      refuses to overwrite an existing sequence number, so a published root can never be changed — not by the
+      operator, not by the attacker.</li>
+  <li><b>Write-time receipts.</b> Each entry's content hash is returned to the auditor at write time and stored
+      outside the server, so deleted lines can be proven to have existed.</li>
+</ul>
+
+<h2>Why the blockchain is load-bearing</h2>
+<p>Remove the chain and the system fails its own test: the attacker holds the server, so anything stored only on
+the server can be rewritten. The chain supplies the one property the server cannot manufacture — <b>an
+independent witness that recorded the value before the attack</b>. Verification therefore reduces to comparing
+recomputed roots against roots that were published earlier and cannot move.</p>
+
+<div class="quote">The attacker owns the server. He still can't silence the witness.</div>
+
+<h2>What the demo shows</h2>
+<table>
+  <tr><th>Step</th><td>Attacker gains root, deletes 34 entries and rewrites the incriminating commands</td></tr>
+  <tr><th>Careful attacker</th><td>Also recomputes all 1,166 hashes — the file is internally perfect, and the
+      hash chain reports <b>intact</b></td></tr>
+  <tr><th>Result</th><td><b>TAMPERED.</b> Batch 3's published root no longer matches; the exact batch and entry
+      range are identified</td></tr>
+  <tr><th>Recovery</th><td>The 34 deleted lines are recovered from write-time receipts held outside the server</td></tr>
+</table>
+
+<h2>Who it helps</h2>
+<p>Indian SaaS companies, fintechs, banks and hospitals that must retain logs under CERT-In directions and must
+answer auditors and courts after an incident. India ranks first on Chainalysis's 2026 global crypto-adoption
+index and CERT-In handled roughly 30 lakh incidents in 2025, so incident evidence is a national-scale problem,
+not a niche one. CERT-In itself has moved audit-certificate verification onto a blockchain (AMBAK, July 2026) —
+we apply the same pattern one level down, from the certificate to the evidence behind it.</p>
+
+<div class="two">
+  <div>
+    <h2>Built with</h2>
+    <p>Node.js · ethers.js · Solidity (solc) · a local EVM chain for the demo, with the same contract compiled and
+    ready for Polygon Amoy · zero-dependency hash-chain and Merkle implementation · browser UI</p>
+  </div>
+  <div>
+    <h2>Implementation size</h2>
+    <p>~1,210 lines across 21 files. Hash chain, Merkle tree with inclusion proofs, Solidity contract,
+    anchoring worker, three-way auditor, two attacker profiles, web UI.</p>
+  </div>
+</div>
+
+<h2>Honest limitations</h2>
+<ul>
+  <li>The anchor interval leaves a short window: entries not yet batched are protected by the hash chain only.
+      Closing it needs per-write anchoring at higher cost, or the receipt path promoted to primary.</li>
+  <li>If the attacker blocks outbound traffic, new anchors stop. History cannot be rewritten, but new entries go
+      unwitnessed until an alarm fires (alarm not yet implemented).</li>
+  <li>If the anchor signing key is stolen, the attacker can publish new roots — but never alter old ones.</li>
+  <li>The demonstration runs on a local EVM chain; the contract is chain-agnostic and deploys to Amoy unchanged.</li>
+</ul>
+
+<div class="foot">
+  All log data in the demonstration is synthetic. No personal data is written to the chain — only Merkle roots.
+  The Merkle-logging primitive is established prior art (Certificate Transparency, Trillian, Sigstore Rekor);
+  the contribution is the incident-evidence workflow and the compliance framing, not a new data structure.
+</div>
+
+</body>
+</html>

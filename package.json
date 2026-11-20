@@ -1,0 +1,22 @@
+{
+  "name": "witness",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tamper-evident log integrity: hash-chained logs whose Merkle roots are anchored to a public ledger, so a root-level attacker cannot rewrite history.",
+  "scripts": {
+    "seed": "node scripts/seed.js",
+    "anchor": "node scripts/anchor.js",
+    "verify": "node cli.js verify",
+    "attack": "node scripts/attack.js",
+    "ui": "node server.js",
+    "reset": "node scripts/reset.js",
+    "wallet": "node scripts/wallet.js",
+    "deploy": "node scripts/deploy.js",
+    "verify:chain": "node scripts/verify-chain.js"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "ganache": "^7.9.2",
+    "solc": "^0.8.39"
+  }
+}

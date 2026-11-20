@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WITNESS — tamper-evident logs</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#111823; --panel2:#0e141d; --line:#1e2a38;
+    --fg:#e6edf6; --muted:#7d8ea3; --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --blue:#3b82f6;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:grid;place-items:center;font-weight:800;font-size:16px;color:#fff}
+  h1{font-size:19px;margin:0;letter-spacing:.14em;font-weight:700}
+  .tag{font-size:12px;color:var(--muted);letter-spacing:.02em}
+  .pill{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;padding:7px 13px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-transform:uppercase}
+  .pill.ok{color:var(--green);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+  .pill.bad{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+
+  .banner{border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px;background:var(--panel)}
+  .banner.ok{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.09),rgba(34,197,94,.02))}
+  .banner.bad{border-color:rgba(239,68,68,.35);background:linear-gradient(180deg,rgba(239,68,68,.12),rgba(239,68,68,.03))}
+  .banner h2{margin:0 0 6px;font-size:17px;letter-spacing:.02em}
+  .banner.ok h2{color:var(--green)} .banner.bad h2{color:var(--red)}
+  .banner p{margin:0;color:var(--muted);font-size:13px}
+  .banner code{font-family:var(--mono);color:var(--fg);font-size:12px}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted);margin-bottom:7px}
+  .stat .v{font-family:var(--mono);font-size:19px;font-weight:600}
+  .stat .v.g{color:var(--green)} .stat .v.r{color:var(--red)} .stat .v.a{color:var(--amber)}
+
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card h3{margin:0;padding:13px 16px;font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .scroll{max-height:340px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:8px 16px;font-weight:500;color:var(--muted);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+  td{padding:7px 16px;border-bottom:1px solid rgba(30,42,56,.55);font-family:var(--mono);font-size:12px;white-space:nowrap}
+  td.act{font-family:inherit}
+  .seq{color:var(--muted)}
+  .danger{color:var(--red)} .safe{color:var(--green)}
+  .anchor{display:flex;justify-content:space-between;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(30,42,56,.55);font-family:var(--mono);font-size:11.5px}
+  .anchor .b{color:var(--blue)}
+  .anchor .t{color:var(--muted)}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 14px}
+  button{font:inherit;font-weight:600;padding:11px 17px;border-radius:10px;border:1px solid var(--line);background:#18212e;color:var(--fg);cursor:pointer;transition:.15s}
+  button:hover{background:#1f2b3b;border-color:#2c3c50}
+  button.r{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.45);color:#ffb4b4}
+  button.r:hover{background:rgba(239,68,68,.2)}
+  button.g{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#9ff0bd}
+  button.g:hover{background:rgba(34,197,94,.18)}
+  button:disabled{opacity:.5;cursor:wait}
+
+  .note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin-top:16px;line-height:1.6}
+  details{margin-top:10px}
+  summary{cursor:pointer;color:var(--muted);font-size:12px}
+  .proof{font-family:var(--mono);font-size:11px;color:var(--amber);word-break:break-all;margin-top:8px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark">W</div>
+      <div>
+        <h1>WITNESS</h1>
+        <div class="tag">Tamper-evident logs — the proof survives the attacker</div>
+      </div>
+    </div>
+    <div id="pill" class="pill">checking…</div>
+  </header>
+
+  <div id="banner" class="banner"></div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Entries on disk</div><div class="v" id="s-disk">–</div></div>
+    <div class="stat"><div class="k">Entries at write time</div><div class="v" id="s-expected">–</div></div>
+    <div class="stat"><div class="k">Batches anchored</div><div class="v" id="s-batches">–</div></div>
+    <div class="stat"><div class="k">Hash chain</div><div class="v" id="s-chain">–</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3><span>Log stream</span><span id="stream-note"></span></h3>
+      <div class="scroll"><table id="logs"><thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th><th>Hash</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <h3><span>Published roots</span><span id="anchor-note"></span></h3>
+      <div class="scroll" id="anchors"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="r" onclick="attack('naive')">Attacker: naive delete</button>
+    <button class="r" onclick="attack('smart')">Attacker: careful forgery</button>
+    <button class="g" onclick="verifyNow()">Run audit</button>
+    <button onclick="reset()">Reset demo</button>
+  </div>
+
+  <div id="report"></div>
+
+  <div class="note">
+    Every entry is hashed together with the entry before it, so one edit breaks every hash after it.
+    Once a batch of entries is complete it is reduced to a single Merkle root and published — and once published,
+    the server can never change that number again. An attacker with root can rewrite the file, and can even recompute
+    every hash; he still cannot change a root that other machines already recorded.
+    <details><summary>What this does not protect against</summary>
+      <div class="proof">Entries written but not yet anchored (the tail of the current batch) are protected by the hash chain only —
+      a root-level attacker inside that window could still delete them. Closing it needs per-write receipts
+      (implemented auditor-side, shown above) or immediate anchoring at higher cost.</div>
+    </details>
+  </div>
+</div>
+
+<script>
+const fmt = (n) => n?.toLocaleString?.('en-IN') ?? '–';
+const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function paint(s){
+  const r = s.report;
+  const tampered = r.verdict !== 'VERIFIED';
+
+  document.getElementById('pill').className = 'pill ' + (tampered ? 'bad' : 'ok');
+  document.getElementById('pill').textContent = tampered ? 'integrity failed' : 'integrity verified';
+
+  const b = document.getElementById('banner');
+  b.className = 'banner ' + (tampered ? 'bad' : 'ok');
+  if (!tampered){
+    b.innerHTML = `<h2>✓ Logs verified</h2><p>${fmt(r.entriesOnDisk)} entries, ${fmt(r.batchesPublished)} published roots, hash chain intact. Every line matches what was recorded at write time.</p>`;
+  } else {
+    const bad = r.badBatches[0];
+    b.innerHTML = `<h2>✗ Tampering detected</h2>
+      <p>${fmt(r.entriesOnDisk)} entries on disk, but ${fmt(r.entriesExpected)} were written.
+      ${r.missingEntries.length} entries were deleted and cannot be recovered from the server.
+      ${bad ? `First broken batch: <code>#${bad.batch}</code> (entries ${bad.seqRange}) — published root <code>${bad.publishedRoot.slice(0,24)}…</code> no longer matches the data.` : ''}
+      ${r.chainOk ? 'The hash chain is internally consistent — this attacker recomputed every hash. Only the published root caught him.' : `Hash chain broken at entry ${r.firstBrokenEntry}.`}</p>`;
+  }
+
+  document.getElementById('s-disk').textContent = fmt(r.entriesOnDisk);
+  document.getElementById('s-disk').className = 'v ' + (tampered ? 'r' : '');
+  document.getElementById('s-expected').textContent = fmt(r.entriesExpected);
+  document.getElementById('s-batches').textContent = fmt(r.batchesPublished);
+  const c = document.getElementById('s-chain');
+  c.textContent = r.chainOk ? 'intact' : 'broken @ ' + r.firstBrokenEntry;
+  c.className = 'v ' + (r.chainOk ? 'g' : 'r');
+
+  document.querySelector('#logs tbody').innerHTML = s.entries.map(e => `
+    <tr><td class="seq">${e.seq}</td><td>${new Date(e.ts).toLocaleTimeString('en-IN',{hour12:false})}</td>
+    <td>${esc(e.actor)}</td><td class="act">${esc(e.action)}</td><td class="seq">${e.hash.slice(0,10)}…</td></tr>`).join('');
+  document.getElementById('stream-note').textContent = s.total + ' total';
+
+  document.getElementById('anchors').innerHTML = s.ledger.map(b => `
+    <div class="anchor"><span class="b">#${b.batch}</span><span class="t">${b.root.slice(0,18)}…</span><span class="t">${b.chain === 'LOCAL-SIMULATED' ? 'local' : b.chain}</span></div>`).join('');
+  const onChain = s.ledger.filter(b => b.chain !== 'LOCAL-SIMULATED').length;
+  document.getElementById('anchor-note').textContent = `${s.ledger.length} roots · ${onChain} on-chain`;
+
+  if (tampered && r.badBatches.length){
+    const missing = r.missingEntries.slice(0,10).map(m =>
+      `<div>entry ${m.seq} · written ${new Date(m.ts).toLocaleString('en-IN')} · hash ${m.hashSeenAtWriteTime.slice(0,20)}…</div>`).join('');
+    document.getElementById('report').innerHTML = `
+      <div class="card" style="margin-bottom:14px">
+        <h3><span>Audit trail recovered from receipts</span><span>${r.missingEntries.length} lost entries</span></h3>
+        <div style="padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:var(--amber);line-height:1.9">
+          These lines no longer exist on the server. The auditor was handed a receipt the moment each was written,
+          and that copy lives on a different machine.
+          ${missing}
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('report').innerHTML = '';
+  }
+}
+
+async function load(){ paint(await (await fetch('/api/state')).json()); }
+
+async function attack(mode){
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  const res = await fetch('/api/attack', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({mode, batch:3})});
+  paint(await res.json());
+  document.querySelectorAll('button').forEach(b => b.disabled = false);
+}
+async function verifyNow(){ await fetch('/api/verify', {method:'POST'}); load(); }
+async function reset(){ paint(await (await fetch('/api/reset', {method:'POST'})).json()); }
+
+load();
+</script>
+</body>
+</html>
