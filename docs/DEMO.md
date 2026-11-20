@@ -61,6 +61,24 @@ Then click **`Evidence bundle`** and open the page it prints.
 
 ---
 
+## The strongest 25 seconds you have — the auditor
+
+Click **`auditor view ↗`** (top right, next to the integrity pill).
+
+> "This is a separate verifier. It reads two things — the bundle you hand it, and the root on the blockchain. It never opens our log files, so you don't have to trust our server."
+
+Press **`Tamper with it (demo)`** → the JSON changes by one field → click **`Verify bundle`**.
+
+> "Watch: I changed one character of the evidence. It refuses. The digest fails, the proof fails, and the chain root is untouched — so it can't be talked into agreeing."
+
+Press **`Load latest export`** → **`Verify bundle`** again.
+
+> "Restored, verified. And you can run the same check yourself with one command — it's in the repo."
+
+**Why this matters:** every other team's demo says "trust our dashboard". Yours hands the judge a verifier that cannot be fooled by the thing you built.
+
+---
+
 ## If the demo breaks
 
 | Problem | Do this |
