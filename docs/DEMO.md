@@ -1,140 +1,157 @@
-# DEMO — what to click, what to say
+# DEMO — Trackfoots, 2:30, timed
 
-Total: **2 min 30**. Rehearse it four times. Do not improvise.
+You have **150 seconds** and **151 words**. That is deliberate: two thirds of this demo is the judge reading the
+screen while you keep quiet. If you fill the gaps with talking, you overrun and you start overclaiming.
 
----
-
-## Before you start (2 min before judging)
-
-```bash
-cd C:\Users\sahil\Documents\bighack\witness
-node server.js
-```
-
-Open `http://localhost:5173` in Chrome — that is the **marketing page**. Click **Open the live dashboard**
-(the button goes to `/app`). Confirm the banner is green and the log table shows `ssh login accepted`,
-`sudo /usr/bin/apt update` — real-format lines, not fixtures.
-
-> If judges are still walking up, the landing page is the thing to leave on screen: serif, white, calm, and it
-> says what the product is before you open your mouth. The moment you start talking, click through to `/app`.
-
-Have the terminal open in a second window, already `cd`-ed into the folder. Have `exports\` open in
-Explorer so the incident report is one double-click away.
+Rehearse three times with a visible timer. Print the table on one page.
 
 ---
 
-## The script
+## Before you speak (60 seconds, do not improvise)
 
-**[0:00] Point at the green banner.**
-> "Every company in India is required to keep security logs for 180 days. When they get hacked, those logs are the only record of what happened. And they sit on the same machine the attacker just took over."
-
-**[0:20] Point at the log table.**
-> "Each line is hashed together with the line before it. Change one line and every hash after it breaks. Every hundred lines we squeeze the batch into one fingerprint and publish it — on Polygon. That fingerprint can never be changed again."
-
-**[0:45] Click "Attacker: naive delete".**
-> "Our attacker now has root on this box. He deletes the incriminating lines."
-
-**[0:55] The banner turns red.**
-> "Caught immediately. That's the easy attacker."
-
-**[1:00] Click "Reset demo", then "Attacker: careful forgery".**
-> "Now the real one. He deletes 34 entries and **recomputes every single hash**, so the file is internally perfect."
-
-**[1:15] Point at `Hash chain: intact`.**
-> "Look — the chain is intact. Every local check passes. This is the attacker every open-source tool loses to."
-
-**[1:22] Point at the red banner, batch 3.**
-> "Still caught, because 34 was published as a different fingerprint three hours ago and he cannot change that number. Batch 3, entries 201 to 300."
-
-**[1:38] Scroll to the receipts line.**
-> "These are the deleted lines. Every one came with a receipt signed the moment it was written, with a key that is not on this machine. He can destroy the log. He cannot destroy the proof it existed."
-
-**[1:52] Click "Send a live line".**
-> "And this is the part that used to be our gap — a line written *after* the last anchor. Watch: the application posts it and gets a signed receipt back immediately — its sequence number, its hash, its signature. That window is now protected at write time, not at batch time."
-
-**[2:05] Point at the red ALERT line under the banner.**
-> "Nobody had to look at a dashboard. The moment verification failed, an alert was raised and dispatched — Slack, PagerDuty, whatever we point it at."
-
-**[2:12] Click "Incident report ↗".**
-> "And this is what we file. CERT-In requires notification within six hours. One page: incident ID, detection time, which sequences are gone, the published roots, the contract address, and how they verify it themselves. And a section saying what we **cannot** prove — the content of deleted lines, and who deleted them."
-
-**[2:25] Close.**
-> "The attacker owns the server. He still can't rewrite history — and when he tries, we can prove it to someone who doesn't trust us."
+1. `/app` is open on the projector tab. The banner must be **green: "✓ Logs verified — 1,200 entries, 12 published roots, hash chain intact."** If it is not, click **Reset demo** and wait ~3 s.
+2. Scroll so the **action row** (the red/green buttons) sits in the **lower third** of the screen. The receipts report renders *underneath* it — you must not scroll mid-sentence at 1:40.
+3. Timer visible to you, not the judges. Start it on your first word.
+4. Do **not** restart the server on stage unless a break row below says to.
 
 ---
 
-## Optional beats (only with spare seconds)
+## The first 10 seconds (memorise this exactly)
 
-**`Prove entry`** — type `250`, click it.
-> "An inclusion proof. Seven hashes prove line 250 sat inside batch 3 when its root was published — without shipping the other ninety-nine lines."
+> **"Every company in India must keep security logs for 180 days."**
 
-**`Evidence bundle`** → open the page.
-> "What the company hands the auditor. One entry, its transaction, and the proof they can check themselves."
-
-**`auditor view ↗`** — the strongest 25 seconds you have.
-> "A separate verifier. It reads two things: the bundle you hand it, and the root on the blockchain. It never opens our log files, so you don't have to trust our server."
->
-> Press **`Tamper with it (demo)`** → **`Verify bundle`** → it refuses. Restore → verifies.
-
-**Search** — press `/`, type `ssh login failed`.
-> "1,200 lines and it's a real log browser — 146 matches, filter by actor, paginate. This is what an analyst actually uses at 3 a.m."
-
-**`/status`** — open in a new tab.
-> "Same system, no login, no dashboard. A customer or a regulator checks it themselves: root, batches, contract address. If our API were down it would say so — a status page that lies is worse than none."
-
-**Adoption, if they ask "but how would we use this?"**
-> "`npm run shipper -- --file /var/log/auth.log --follow`. It tails the file, parses sshd, pushes through the API, resumes from an offset, survives log rotation. No application changes. And `npm run tenants` runs one deployment per company — separate process, separate data, separate roots."
+- Stand still. **Right hand flat on the green banner** — palm on the screen edge, not pointing at the log table.
+- One full second of silence. Then: **"Those logs sit on the machine the attacker just took over."**
+- Do not say "so", "um", "this is our project", or "let me show you". Start on the noun.
 
 ---
 
-## If the demo breaks
+## The clock
 
-| Problem | Do this |
+| Clock | You click | You say (≤22 words) | The judge sees |
+|---|---|---|---|
+| **0:00–0:20**<br>*(done by 0:09)* | Nothing. Flat hand on the green banner. | "Every company in India must keep security logs for 180 days. Those logs sit on the machine the attacker just took over." | Green banner: **✓ Logs verified** · 1,200 entries · 12 published roots · hash chain intact |
+| **0:20–0:45**<br>*(done by 0:29)* | Point down the log table, then at the **Published roots** card. No clicking. | "Each line is hashed with the one before it, so one edit breaks everything after. Every hundred lines become one published root." | 1,200 real sshd-format lines; 12 root rows `#1…#12`, each with a truncated root hash |
+| **0:45–1:00**<br>*(done by 0:50)* | **Attacker: naive delete** | "He has root now. He deletes the incriminating lines and leaves the hashes alone." | Banner flips **red: ✗ Tampering detected**, "Hash chain broken at entry …", red **ALERT** line appears under it |
+| **1:00–1:20**<br>*(done by 1:06)* | **Reset demo** → wait for green → **Attacker: careful forgery** | "Now the dangerous one: 34 lines deleted, every hash recomputed. The file is internally perfect." | Green, then red again. Entries drop 1,200 → 1,166. Banner: "34 entries were deleted" |
+| **1:20–1:40**<br>*(done by 1:28)* | Point at the **Hash chain** stat (`intact`), then at the banner's "First broken batch" line. | "Chain says intact. Every local check passes. Still caught: batch three was published as a different root three hours ago." | Stat box: **Hash chain: intact**. Banner: "First broken batch: **#3** (entries 201–300) — published root … no longer matches" |
+| **1:40–2:00**<br>*(done by 1:47)* | Scroll one notch to **Audit trail recovered from receipts**; point at "34 lost entries". Then **Send a live line**. | "Receipts prove the deleted lines existed. And a line written right now comes back signed, before any batch closes." | 34 missing entries with write-time hashes; then a card: sequence, content hash, **receipt signature** |
+| **2:00–2:20**<br>*(done by 2:09)* | Point at the **ALERT** pill. Then **Incident report ↗** (new tab). | "Nobody was watching. The alert fired anyway, and this is the CERT-In filing: six hours, one page, and what we cannot prove." | ALERT: `tamper-detected · 34 entries deleted …` · report page: incident ID, deadline, affected batch, "cannot prove" section |
+| **2:20–2:30**<br>*(done by 2:27)* | Hands off. Step back from the laptop. | "He owns the server. He still cannot rewrite history, and we can prove it to a stranger." | Both windows: red banner on `/app`, the filing on `/incident` |
+
+**Two footnotes, say neither out loud.** If the ALERT says *repeat suppressed* instead of *dispatched*, that is the
+one-page-per-minute rate limit working — not a failure. And if the incident report says "on **local**", that is the
+honest state; see **Do not say**.
+
+---
+
+## Clock discipline
+
+Glance at the timer at these three points only:
+
+- **0:45** — you should be pressing **Attacker: naive delete**. Still explaining the Merkle root? You are 10 s late: drop "every hundred lines become one published root" on the next run.
+- **1:40** — you should be scrolling to the receipts. If the clock says **1:50+**, **cut the live-line sentence** ("And a line written right now…") and go straight to the alert. The signature card is on screen anyway.
+- **2:00** — you should be opening the incident report. Past **2:10**, jump to the close. Row 8 is never cut.
+
+If you are **early** (clock behind the mark): do not add sentences. Stand still and let the judge read. That pause is
+the demo working, not a gap in it.
+
+---
+
+## If it breaks
+
+One action each, under 15 seconds. Nothing here needs a terminal except one command, and only in row 1.
+
+| What you see | What you do |
 |---|---|
-| Page won't load | `node server.js` again, then refresh |
-| Banner is red before you attack | Click **Reset demo** |
-| Buttons do nothing | Wait 3 seconds (a background anchor is running), or restart the server |
-| Log table is empty | Click **Reset demo** — it reseeds from `samples/` |
-| `samples/` missing | Falls back to synthetic entries automatically; say "format doesn't matter, the maths does" |
-| No internet | Works locally — say "we're on a local EVM now; the same contract is compiled for Amoy" |
-| Projector washes out colours | Say "green means verified, red means tampered" out loud |
+| Page won't load, or is blank | Refresh once. Still blank → one command: `node server.js`, then refresh. Say "one moment, the local node" — nothing else. |
+| Banner is **red before you attack** | Click **Reset demo**, wait for green (~3 s), continue. Do not explain it. |
+| Amber **⚠ Nothing to verify** | Click **Reset demo**. That is the wiped-directory state, not a bug — if judges ask, that amber screen *is* the product. |
+| Buttons greyed out, nothing happens | Wait 3 seconds — a background anchor is running and the action row locks. Press **once**. Never double-click. |
+| Incident report says "No integrity failure detected" | You are on a clean state; it regenerates on every load. Click **Attacker: careful forgery**, reopen **Incident report ↗**. |
+| Amber **CHAIN DEGRADED** banner | Say "roots are in the local ledger only" and keep going. Do **not** say on-chain. Nothing else in the demo is affected. |
 
 ---
 
-## Questions they will ask — and your answers
+## Do not say
 
-**"Isn't this just Certificate Transparency?"**
-> "The primitive is, yes — Trillian and Sigstore Rekor do Merkle logging. We're not claiming a new data structure. What's missing in India is the compliance artifact: CERT-In wants 6-hour reporting and 180-day retention, and assumes your logs are intact. CERT-In itself put audit-certificate verification on a blockchain this year. We applied that pattern to the evidence under the certificate."
+Five phrases that will cost you the room. Left is banned; right is the same claim without the overreach.
 
-**"Blockchain is expensive. Why not a timestamp authority?"**
-> "A TSA proves a document existed at a time. It doesn't prove the document you hold now is the one that was timestamped. We need integrity, not just existence — that's the Merkle root, and the anchor makes it unforgeable. We write 32 bytes per 100 entries; it costs a fraction of a paisa."
+| Never say | Say this instead |
+|---|---|
+| "production ready" | "working end-to-end on one node — single-node, single-threaded" |
+| "on Polygon mainnet" / "on-chain in production" | "on a local EVM right now; the same contract compiles for Amoy" — the anchor row itself says `local only` |
+| "tamper-proof" / "immutable logs" | "tamper-**evident**: he can rewrite the file, he cannot rewrite the published root" |
+| "AI-powered" | "hash chain, Merkle tree, contract, auditor" — name the parts, not the buzzword |
+| "bank-grade" / "enterprise-grade" | "CERT-In 6-hour notification and 180-day retention, as a filing you can hand over" |
 
-**"Can't he steal the anchor key?"**
-> "He can publish new roots. He cannot change roots already published. The damage is bounded to the window where he holds the key, and that window shows up as a gap in sequence numbers."
+---
 
-**"What if he deletes lines before they're anchored?"**
-> "That was our gap. It's now closed for anything written through the ingest API — the application gets a signed receipt at write time, so the proof exists off-box before any batch is published. A line written straight to disk by a process we don't control still depends on the next anchor, and that's stated in the README."
+## If they ask (one breath each)
 
-**"How does an app actually send you logs?"**
-> "POST /api/log with an API key and JSON. Up to a thousand entries per request, 401 without the key, per-index rejection reasons. You get one signed receipt per accepted line."
+**"Isn't this just Certificate Transparency?"** — "Same primitive. What is missing in India is the compliance artifact:
+CERT-In wants 6-hour reporting and assumes your logs are intact."
 
-**"Who gets paged?"**
-> "Alerts are raised on tamper, shown under the banner, and POSTed to a webhook if configured. One per minute per type, so a polling page can't turn one incident into a hundred pages."
+**"Why not a timestamp authority?"** — "A TSA proves a document existed. It does not prove the document you hold now is
+the one that was stamped. We need integrity, not just existence."
 
-**"How many lines can it handle?"**
-> "About 88,000 entries a second through ingest and batching on this laptop — eleven microseconds each. Fifty thousand lines re-verify in about two hundred milliseconds. The honest limit is single-node, single-threaded."
+**"Can't he steal the anchor key?"** — "He can publish new roots. He cannot change ones already published. The damage is
+bounded to that window, and it shows up as a gap in sequence numbers."
 
-**"Did you build all of this?"**
-> "During the hackathon, with AI pair-programming tools. The hash chain, Merkle tree, contract, auditor and UI are ours; ethers.js and solc are open-source libraries, which the rules allow."
+**"What about lines deleted before they were anchored?"** — "Closed for anything through the ingest API: a signed
+receipt at write time, outside `data/`, before any batch. A process writing straight to disk still waits for the next
+anchor — that is stated in the README."
+
+**"Did you build this?"** — "During the hackathon, with AI pair-programming. Chain, tree, contract, auditor and UI are
+ours; ethers.js, solc and the RFC 6962 rules are not."
+
+---
+
+## Optional beats — only if the clock is behind the mark
+
+Each is outside the 150 seconds. Use **at most one**, and only if you are ahead at 1:40.
+
+- **Forge a receipt** (8 s) — "A receipt for a line that never existed. Rejected: 1,200 valid, one bad MAC." It appends a
+  bad receipt that stays until **Reset demo**, so never press it before 1:40.
+- **Prove entry** (10 s; number box already at `250`) — "Seven hashes show line 250 sat in batch three when it was
+  published, without shipping the other ninety-nine."
+- **auditor view ↗** (15 s) — "A separate verifier: it reads the bundle and the published root, never our log files."
+  Then **Tamper with it (demo)** → **Verify bundle** → it refuses.
+- **`/status`** (8 s) — "No login, no dashboard. A regulator checks the root and the contract address themselves."
 
 ---
 
 ## The one page to memorise
 
 > **Hash chain** → any edit breaks everything after it.
-> **Merkle root** → 100 lines become 1 fingerprint.
-> **Blockchain** → that fingerprint can never be changed again, by anyone.
+> **Merkle root** → 100 lines become one fingerprint.
+> **Published root** → that fingerprint can never be changed again, by anyone.
 > **Receipts** → the deleted lines can still be proved to exist.
 > **Incident report** → the proof becomes a filing, not a screenshot.
 >
-> The attacker owns the server. He still can't rewrite history.
+> He owns the server. He still can't rewrite history.
+
+---
+
+## Timing sanity (computed, not estimated)
+
+Method: words split on whitespace in each *say* cell, punctuation-only tokens excluded; speech time = words ÷
+**2.4 words/second**.
+
+| Clock | Beat | Budget | Words | Speech @2.4 w/s | Idle (click + judge reading) |
+|---|---|---|---|---|---|
+| 0:00 | hook | 20 s | 22 | 9.2 s | 10.8 s |
+| 0:20 | what it is | 25 s | 22 | 9.2 s | 15.8 s |
+| 0:45 | naive attack | 15 s | 14 | 5.8 s | 9.2 s |
+| 1:00 | reset + forgery | 20 s | 15 | 6.2 s | 13.8 s |
+| 1:20 | the catch | 20 s | 20 | 8.3 s | 11.7 s |
+| 1:40 | receipts + live line | 20 s | 19 | 7.9 s | 12.1 s |
+| 2:00 | alert + incident report | 20 s | 22 | 9.2 s | 10.8 s |
+| 2:20 | close | 10 s | 17 | 7.1 s | 2.9 s |
+| **Total** | | **150 s** | **151** | **62.9 s** | **87.1 s** |
+
+- **Total words: 151. Total seconds: 150. Speech: 62.9 s (42%).** Longest row: 22 words (cap is 22). No row exceeds its budget.
+- Effective delivery is **~60 words/minute** — a third of normal speech. Every row carries 3–16 s of deliberate silence;
+  that silence is where the judge reads the banner. Talk through it and you run over.
+- If you speak at a normal 3.5 w/s instead, each row finishes ~3 s early: **hold the pause**, do not add a sentence.
+- Rehearsal check: a take under **2:10** means you cut something; over **2:35** means you ad-libbed.

@@ -38,7 +38,7 @@ Status: **feature-complete for B3.** Everything marked ✅ was verified by runni
 
 ## Engineering
 
-- [x] **174 tests, 174 pass, 0 fail** across 18 test files
+- [x] **178 tests, 178 pass, 0 fail** across 19 test files
 - [x] Audit is **O(n log n)** — incremental RFC 6962 accumulator; 50k entries in 2.2 s (was 107 s), roots byte-identical
 - [x] Benchmark: 88,700 entries/s ingest · $2.30 per 100K events at 100-event epochs
 - [x] Zero runtime dependencies beyond `ethers`/`solc` (hash chain and Merkle are ours)
