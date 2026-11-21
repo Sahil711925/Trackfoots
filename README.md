@@ -136,7 +136,7 @@ starts the server and opens the browser.
 | `public/index.html` | The demo UI — one file, no build step |
 | `cli.js` | Terminal auditor (`node cli.js verify`) |
 | `scripts/` | Entry points: seed, anchor, attack, deploy, wallet, prove, bundle, chain verification |
-| `tests/` | 178 automated tests (`npm test`), CI on every push |
+| `tests/` | 183 automated tests (`npm test`), CI on every push |
 | `docs/` | Architecture, demo script, judge Q&A, **prior art**, build checklist |
 | `LICENSE` | MIT |
 | `START_DEMO.bat` / `VERIFY_CHAIN.bat` | One-click launch and one-click chain proof |

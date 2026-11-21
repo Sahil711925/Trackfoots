@@ -336,8 +336,8 @@
   <div class="wrap">
     <p class="eyebrow"><span>02</span> What an auditor sees</p>
     <h2>A verifier that doesn't trust <em>us.</em></h2>
-    <p>Export a bundle and it verifies offline — no access to our log files, no account, no phone call. Every
-    receipt is checked, and the set is checked for completeness against its own Merkle root.</p>
+    <p>Export a bundle and it verifies offline: no access to our logs, no account, no call. Every receipt is
+    checked, and the set is checked for completeness against its own Merkle root.</p>
 
     <div class="codeblock reveal">
       <div class="codecap"><span>Exit 0 · clean bundle</span><button class="copy" data-copy="cmd1">Copy</button></div>
@@ -432,23 +432,22 @@
   <div class="wrap">
     <p class="eyebrow"><span>05</span> Threat model</p>
     <h2>What it catches, and what it <em>can't tell you.</em></h2>
-    <p>Ten attacker capabilities, judged one at a time. This is the table an auditor actually wants, and it is the
-    reason the product is credible: the gaps are listed next to the wins.</p>
+    <p>Ten attacker capabilities, judged one at a time. The gaps sit next to the wins, which is why an auditor can
+    read it without a sales call.</p>
 
     <div class="tablewrap reveal">
       <table>
         <thead><tr><th>Attacker capability</th><th>Detected?</th><th>What catches it</th><th>What it can't tell you</th></tr></thead>
-        <tbody>
-          <tr><td><b>Delete log lines</b></td><td style="color:var(--ok)">Yes</td><td>Published root no longer matches the recomputed leaf count</td><td>Which content was in the deleted lines</td></tr>
-          <tr><td><b>Edit a line</b></td><td style="color:var(--ok)">Yes</td><td>Hash chain breaks at that entry</td><td>Who edited it</td></tr>
+        <tr><td><b>Delete log lines</b></td><td style="color:var(--ok)">Yes</td><td>Published root disagrees with the recomputed count</td><td>What the deleted lines said</td></tr>
+          <tr><td><b>Edit a line</b></td><td style="color:var(--ok)">Yes</td><td>Chain breaks at that entry</td><td>Who edited it</td></tr>
           <tr><td><b>Reorder lines</b></td><td style="color:var(--ok)">Yes</td><td>Sequence numbers are inside the digest</td><td>—</td></tr>
-          <tr><td><b>Rewrite every hash</b></td><td style="color:var(--ok)">Yes</td><td>Only the anchored root — local checks pass by design</td><td>Content, still</td></tr>
-          <tr><td><b>Truncate the tail</b></td><td style="color:var(--ok)">Yes</td><td>Fewer entries than the last published checkpoint</td><td>Lines after the last anchor</td></tr>
-          <tr><td><b>Replace the data dir</b></td><td style="color:var(--ok)">Yes</td><td>Every root diverges; receipts on disk don't match</td><td>When the swap happened</td></tr>
-          <tr><td><b>Wipe the whole directory</b></td><td style="color:var(--ok)">Yes</td><td>An empty store reports NO DATA, not VERIFIED; surviving receipts escalate it to TAMPERED</td><td>When it happened</td></tr>
-          <tr><td><b>Backdate timestamps</b></td><td style="color:var(--warn)">Partly</td><td>Timestamps are inside the digest, so edits break the chain — but a writer can submit an old timestamp. Anchoring proves existence before a block, not that the claimed time is true</td><td>True event time</td></tr>
-          <tr><td><b>Block outbound network</b></td><td style="color:var(--warn)">Partly</td><td>Liveness check raises STALE and alerts</td><td>Anything written after anchoring stopped</td></tr>
-          <tr><td><b>Steal the anchor key</b></td><td style="color:var(--bad)">No, for new roots</td><td>Old roots stay frozen; a gap in sequence numbers is visible</td><td>Whether new roots are honest</td></tr>
+          <tr><td><b>Rewrite every hash</b></td><td style="color:var(--ok)">Yes</td><td>Only the anchored root; local checks pass by design</td><td>Content, still</td></tr>
+          <tr><td><b>Truncate the tail</b></td><td style="color:var(--ok)">Yes</td><td>Fewer entries than the last checkpoint</td><td>Lines after the last anchor</td></tr>
+          <tr><td><b>Replace the data dir</b></td><td style="color:var(--ok)">Yes</td><td>Roots diverge; receipts no longer match</td><td>When it happened</td></tr>
+          <tr><td><b>Wipe the whole directory</b></td><td style="color:var(--ok)">Yes</td><td>Says NO DATA, never VERIFIED; surviving receipts make it TAMPERED</td><td>When it happened</td></tr>
+          <tr><td><b>Backdate timestamps</b></td><td style="color:var(--warn)">Partly</td><td>Timestamps sit in the digest, but the writer chooses them</td><td>True event time</td></tr>
+          <tr><td><b>Block outbound network</b></td><td style="color:var(--warn)">Partly</td><td>Liveness raises STALE and alerts</td><td>Anything written after anchoring stopped</td></tr>
+          <tr><td><b>Steal the anchor key</b></td><td style="color:var(--bad)">No, for new roots</td><td>Old roots freeze; the sequence gap is visible</td><td>Whether new roots are honest</td></tr>
         </tbody>
       </table>
     </div>
@@ -459,66 +458,44 @@
 
 <section>
   <div class="wrap">
-    <p class="eyebrow"><span>06</span> Adopting it</p>
-    <h2>Three ways in, none of which touch <em>your code.</em></h2>
+    <p class="eyebrow"><span>06</span> Adopting and filing</p>
+    <h2>One command to adopt. One command to <em>file.</em></h2>
+    <p>Nothing in your application changes. The shipper reads the log file you already write.</p>
 
-    <div class="stages" style="grid-template-columns:repeat(3,1fr);margin-bottom:34px">
+    <div class="stages" style="grid-template-columns:repeat(3,1fr);margin-bottom:30px">
       <div class="stage reveal">
         <span class="n">SHIPPER</span>
         <h4>Tails an existing file</h4>
-        <p>Parses sshd, nginx or syslog, resumes from a byte offset, survives rotation.</p>
+        <p>sshd, nginx or syslog. Resumes from a byte offset, survives rotation.</p>
       </div>
       <div class="stage hot reveal">
         <span class="n">API</span>
         <h4>One POST per event</h4>
-        <p>A signed receipt comes back at write time — proof before any attacker exists.</p>
+        <p>Signed receipt returned at write time.</p>
       </div>
       <div class="stage reveal">
         <span class="n">TENANTS</span>
         <h4>One process per company</h4>
-        <p>Own data dir, own key, own sequence namespace. Isolation you can point at.</p>
+        <p>Own data dir, key and sequence namespace.</p>
       </div>
     </div>
 
     <div class="codeblock reveal">
-      <div class="codecap"><span>Shipper · tail and push</span><button class="copy" data-copy="cmd3">Copy</button></div>
+      <div class="codecap"><span>Install · tail and push</span><button class="copy" data-copy="cmd3">Copy</button></div>
       <pre id="cmd3">$ npm run shipper -- --file /var/log/auth.log --url http://localhost:5173 --key $INGEST_KEY --follow
 
-  format    sshd (auto-detected)
-  offset    0 (fresh start)
-  endpoint  http://localhost:5173/api/log
-  batch     50 per POST, follow on
+  format sshd · offset 0 · batch 50 · follow on
 sent 50 entries -> 202 accepted 50; receipts 50, first seq 1</pre>
     </div>
 
-    <div class="codeblock reveal">
-      <div class="codecap"><span>API · one event, one receipt</span><button class="copy" data-copy="cmd4">Copy</button></div>
-      <pre id="cmd4">$ curl -s -X POST http://localhost:5173/api/log \
-    -H "x-api-key: $INGEST_KEY" -H 'content-type: application/json' \
-    -d '{"actor":"rahul","action":"ssh login accepted","meta":{"ip":"103.21.44.9"}}'
-
-{
-  "accepted": 1,
-  "receipts": [{ "seq": 1201, "chash": "1a8b5856…", "sig": "155f5fb7…", "sigAlg": "hmac-sha256" }]
-}</pre>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <p class="eyebrow"><span>07</span> Compliance</p>
-    <h2>Built for the filing, not just the <em>finding.</em></h2>
-
-    <div class="tablewrap reveal">
+    <div class="tablewrap reveal" style="margin-top:34px">
       <table>
-        <thead><tr><th>Duty</th><th>What this does</th><th>Proof</th></tr></thead>
+        <thead><tr><th>Duty</th><th>What it produces</th><th>Command</th></tr></thead>
         <tbody>
-          <tr><td><b>180-day retention</b></td><td>Reports what's in policy, what expired, and refuses to prune anything inside a published batch</td><td><code>npm run retention</code></td></tr>
-          <tr><td><b>6-hour incident report</b></td><td>Generates the notification: incident ID, detection time, affected sequences, published roots, verification steps</td><td><code>npm run incident</code></td></tr>
-          <tr><td><b>Evidence for a dispute</b></td><td>Bundle + offline verifier that names the exact batch that failed</td><td><code>npm run auditor</code></td></tr>
-          <tr><td><b>Auditor access without an account</b></td><td>Public status page: verdict, every root, contract address</td><td><a href="/status" style="color:var(--bhagwa-2)">/status</a></td></tr>
-          <tr><td><b>DPDP erasure vs immutability</b></td><td>Hash or salt personal fields before ingest; destroy the salt. The proof survives, the identity doesn't</td><td>design decision, documented</td></tr>
+          <tr><td><b>180-day retention</b></td><td>In-policy, expired, and refuses to prune inside a published batch</td><td><code>npm run retention</code></td></tr>
+          <tr><td><b>6-hour report</b></td><td>Incident ID, detection time, affected sequences, published roots, verification steps</td><td><code>npm run incident</code></td></tr>
+          <tr><td><b>Evidence for a dispute</b></td><td>Bundle plus an offline verifier that names the failed batch</td><td><code>npm run auditor</code></td></tr>
+          <tr><td><b>Auditor access</b></td><td>Public page: verdict, every root, contract address, no account</td><td><a href="/status" style="color:var(--bhagwa-2)">/status</a></td></tr>
         </tbody>
       </table>
     </div>
@@ -527,11 +504,11 @@ sent 50 entries -> 202 accepted 50; receipts 50, first seq 1</pre>
 
 <section>
   <div class="wrap">
-    <p class="eyebrow"><span>08</span> The numbers</p>
+    <p class="eyebrow"><span>07</span> The numbers</p>
     <h2>Measured on a laptop, <em>not in a deck.</em></h2>
 
     <div class="numbers">
-      <div class="num"><b data-count="178">0</b><span>automated tests</span></div>
+      <div class="num"><b data-count="183">0</b><span>automated tests</span></div>
       <div class="num"><b><i data-count="12">0</i>/12</b><span>roots match on-chain</span></div>
       <div class="num"><b data-count="88700" data-suffix="">0</b><span>events / second</span></div>
       <div class="num"><b>$<i data-count="2.30" data-dec="2">0</i></b><span>per 100K events</span></div>
@@ -545,33 +522,29 @@ sent 50 entries -> 202 accepted 50; receipts 50, first seq 1</pre>
 
 <section>
   <div class="wrap" style="max-width:940px">
-    <p class="eyebrow"><span>09</span> Plain answers</p>
+    <p class="eyebrow"><span>08</span> Plain answers</p>
     <h2>Including the <em>uncomfortable</em> ones.</h2>
 
     <details open>
       <summary>What does a passing verification actually prove?</summary>
-      <p>That the record you hold is the record that existed when the root was published — nothing edited, deleted
-      or reordered. It does not prove what was written was true, or who wrote it. A deleted line's content cannot
-      be recovered from a hash; only its existence and position can be proven.</p>
-    </details>
-
-    <details>
-      <summary>Where is it running right now?</summary>
-      <p>The demo runs on a local EVM. The contract is also built for <b>Quai Network</b> — Quai's
-      compiler ceiling is Solidity 0.8.20, its SDK is <code>quais</code>, and addresses carry a 9-bit
-      routing prefix, so a plain Ethereum address is rejected outright. We handle all three: Orchard
-      testnet (chain 15000), a Quai-format account, and a deployment the node priced at 333,698 gas.
-      What we could not get is testnet QUAI — the faucet host named in Quai's own docs no longer
-      resolves, and the third-party replacement needs a drop link from the organisers. The Polygon
-      Amoy attempt is blocked the same way. Both are written up in the repository.</p>
+      <p>That the record you hold is the record that existed when the root was published: nothing edited,
+      deleted or reordered. Not that what it recorded was true, and not who wrote it. A deleted line's
+      content cannot be recovered from a hash, only its existence.</p>
     </details>
 
     <details>
       <summary>What happens if the attacker deletes lines before the next anchor?</summary>
-      <p>Anything written through the API is covered immediately — the receipt leaves the box at write time. A line
-      written straight to disk by a process we don't control is protected only from the next anchor, and the
-      liveness check raises an alert when anchoring stops.</p>
+      <p>Anything through the API is covered immediately, because the receipt leaves at write time. A line
+      written straight to disk waits for the next anchor, and the liveness check raises an alert when
+      anchoring stops.</p>
     </details>
+
+    <details>
+      <summary>Where does it run today?</summary>
+      <p>A local EVM for the demo. The same contract compiles for Quai (0.8.20 ceiling) and Polygon Amoy;
+      both testnet faucets are blocked, and both attempts are in the repository with the literal errors.</p>
+    </details>
+
   </div>
 </section>
 

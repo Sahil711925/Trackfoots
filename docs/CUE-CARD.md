@@ -15,7 +15,7 @@ Read this at 1 a.m. Short lines. Say the answer, then stop.
 
 ## Numbers you may say
 
-- **178 tests, 19 files** — `npm test` prints `pass 178, fail 0`.
+- **183 tests, 20 files** — `npm test` prints `pass 183, fail 0`.
 - **1,200 entries · 12 batches · 100 entries per batch.**
 - **12/12 roots** read back from the chain match the ledger, 0 differ.
 - **34 deleted, 7 rewritten**, batch 3, **10 batches affected** — chain still says *intact*.
@@ -63,7 +63,7 @@ Read this at 1 a.m. Short lines. Say the answer, then stop.
 
 > "Yes, during the hackathon, with AI coding tools. Our code: chain, Merkle tree, 51-line contract, auditor, UI. Libraries: ethers and solc."
 
-**Back:** `npm test` → 178 pass, 0 fail; `contracts/LogAnchor.sol` is 51 lines.
+**Back:** `npm test` → 183 pass, 0 fail; `contracts/LogAnchor.sol` is 51 lines.
 **Push:** "Point at any file and I'll explain it; the only third-party pieces are ethers, the local chain, and the compiler."
 
 ---
@@ -228,8 +228,7 @@ Say these three, in this order, then stop:
 
 ## Traps in your own docs
 
-- `README.md` line 129 says "61 passing". Stale. `npm test` prints **178 pass, 19 files**. If a judge quotes 61, say the line is stale and offer the command.
-- `docs/CHECKLIST.md` says "174 tests, 18 files." Also stale. Same answer: 178.
+- Counts are current: **183 tests, 20 files**. If a slide or old doc quotes another number, offer `npm test`.
 - `docs/DEMO.md` says a receipt is "off-box". Not in this build — say "outside `data/`, same host". (Its Polygon line is already fixed.)
 - `README.md` says the receipt key is "outside `data/` (environment/KMS)". True that it's not in `data/`; it is still in `.env` on the same box. Don't stretch that to "off-box".
 - An empty data directory now returns **NO DATA**, not VERIFIED. If an older doc says otherwise, the test wins.
