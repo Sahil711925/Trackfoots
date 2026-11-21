@@ -26,7 +26,7 @@ local EVM on first run.
 | **Dashboard** | `http://localhost:5173/app` — verified / tampered, batch-accurate |
 | **Public status** | `/status` — no login, for auditors and regulators |
 | **Verifier** | `/auditor` — bundle + chain only, never reads the log files |
-| **Docs** | [`docs/`](docs) — architecture, threat model, demo script, judge Q&A |
+| **Docs** | [`docs/`](docs) — architecture, threat model, build log, demo script, judge Q&A |
 
 > **The claim, in one line:** a root-level attacker can delete the logs and recompute every hash, so every
 > local check passes. He cannot change the fingerprint published before he arrived — and that is what

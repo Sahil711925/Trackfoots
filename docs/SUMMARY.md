@@ -64,5 +64,5 @@ Copy whichever fits the field. All numbers are from the repo.
 | Stack | Node.js, Solidity 0.8.20, quais, RFC 6962 Merkle tree, HMAC receipts |
 | Chain | local EVM in the demo · contract compiles for Quai Orchard (15000) and Polygon Amoy |
 | Repo | github.com/Sahil711925/Trackfoots |
-| Size | 116 tracked files |
+| Size | 120 tracked files |
 | Honest gap | testnet faucets blocked on both chains; receipts co-located; single node |
