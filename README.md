@@ -2,10 +2,35 @@
 
 **Tamper-evident security logs — the proof survives the attacker.**
 
+[![tests](https://img.shields.io/badge/tests-183%20passing-2ea043?style=flat-square)](https://github.com/Sahil711925/Trackfoots)
+[![node](https://img.shields.io/badge/node-%E2%89%A522-339933?style=flat-square&logo=node.js&logoColor=white)](package.json)
+[![solidity](https://img.shields.io/badge/solidity-0.8.20-363636?style=flat-square&logo=solidity)](contracts/LogAnchor.sol)
+[![license](https://img.shields.io/badge/license-MIT-FF671F?style=flat-square)](LICENSE)
+
 A log store whose integrity can be *proved* after a breach, even when the attacker has root on the server.
 Built for **The Big Hack 2.0**, Track 02 (Cybersecurity & Blockchain), problem **B3 — "Logs the attacker can't erase."**
 
 ![Trackfoots demo](docs/screenshot.png)
+
+```bash
+git clone https://github.com/Sahil711925/Trackfoots.git && cd Trackfoots
+npm install
+npm run start        # → http://localhost:5173  (landing)  ·  /app (dashboard)
+```
+
+No database, no cloud account, no key to obtain. It seeds itself from real log samples and anchors to a
+local EVM on first run.
+
+| | |
+|---|---|
+| **Dashboard** | `http://localhost:5173/app` — verified / tampered, batch-accurate |
+| **Public status** | `/status` — no login, for auditors and regulators |
+| **Verifier** | `/auditor` — bundle + chain only, never reads the log files |
+| **Docs** | [`docs/`](docs) — architecture, threat model, demo script, judge Q&A |
+
+> **The claim, in one line:** a root-level attacker can delete the logs and recompute every hash, so every
+> local check passes. He cannot change the fingerprint published before he arrived — and that is what
+> catches him.
 
 ---
 
